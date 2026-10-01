@@ -7,6 +7,7 @@ import {
   Moon,
   Settings,
   Sun,
+  type LucideIcon,
 } from "lucide-react";
 import logoIcon from "@/assets/logo-icon.svg";
 import { cn } from "@/lib/utils";
@@ -117,7 +118,18 @@ export function AppSidebar() {
 
   const [openKey, setOpenKey] = useState<string | null>(defaultOpen);
 
-  const [openSubKeys, setOpenSubKeys] = useState<Set<string>>(new Set());
+  // Sub-groups (e.g. PMS > Configuration) that contain the current page start open.
+  const [openSubKeys, setOpenSubKeys] = useState<Set<string>>(() => {
+    const keys = new Set<string>();
+    for (const section of filteredMenu) {
+      for (const group of section.groups) {
+        for (const child of group.children) {
+          if (child.children && hasActiveDescendant(child.children)) keys.add(child.key);
+        }
+      }
+    }
+    return keys;
+  });
 
   const toggleSubKey = (key: string) => {
     setOpenSubKeys((prev) => {
@@ -387,6 +399,7 @@ function MultiMenuItem({
                   active={active}
                   isFirst={idx === 0}
                   isLast={idx === group.children.length - 1}
+                  icon={child.icon}
                 >
                   {child.label}
                   {child.badge && <NavBadge badge={child.badge} />}
@@ -536,6 +549,49 @@ function NavSubGroup({
   const hasActiveChild =
     item.children?.some((c) => c.path && isActive(c.path)) ?? false;
 
+  if (item.icon) {
+    const Icon = item.icon;
+    return (
+      <div>
+        <button
+          type="button"
+          onClick={onToggle}
+          className={cn(
+            "my-0.5 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150",
+            hasActiveChild
+              ? "font-medium text-sidebar-foreground"
+              : "font-normal text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+          )}
+        >
+          <Icon className="size-4 shrink-0" />
+          <span className="flex-1 text-left">{item.label}</span>
+          <ChevronDown
+            className={cn(
+              "size-3 shrink-0 text-sidebar-foreground/35 transition-transform duration-200",
+              isOpen && "rotate-180",
+            )}
+          />
+        </button>
+        {isOpen && item.children && (
+          <div className="ml-[18px] border-l border-sidebar-border/60 pl-2">
+            {item.children.map((sub, idx) => (
+              <NavChildItem
+                key={sub.key}
+                to={sub.path as never}
+                active={sub.path ? isActive(sub.path) : false}
+                isFirst={idx === 0}
+                isLast={idx === item.children!.length - 1}
+                icon={sub.icon}
+              >
+                {sub.label}
+              </NavChildItem>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="relative">
       {/* Vertical connector line — top half */}
@@ -586,6 +642,7 @@ function NavSubGroup({
                 active={active}
                 isFirst={idx === 0}
                 isLast={idx === item.children!.length - 1}
+                icon={sub.icon}
               >
                 {sub.label}
               </NavChildItem>
@@ -603,6 +660,7 @@ export function NavChildItem({
   isFirst,
   isLast,
   children,
+  icon: Icon,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   to: any;
@@ -610,7 +668,25 @@ export function NavChildItem({
   isFirst: boolean;
   isLast: boolean;
   children: React.ReactNode;
+  /** When set the row renders as an icon + pill (PMS) instead of the dotted tree line. */
+  icon?: LucideIcon;
 }) {
+  if (Icon) {
+    return (
+      <Link
+        to={to}
+        className={cn(
+          "my-0.5 flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150",
+          active
+            ? "bg-sidebar-accent font-medium text-sidebar-foreground"
+            : "font-normal text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+        )}
+      >
+        <Icon className="size-4 shrink-0" />
+        <span className="flex-1 truncate">{children}</span>
+      </Link>
+    );
+  }
   return (
     <Link
       to={to}

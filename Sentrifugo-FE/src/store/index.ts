@@ -15,6 +15,7 @@ import { orgDocumentsApi } from './api/orgDocumentsApi'
 import { attendanceApi } from './api/attendanceApi'
 import { announcementsApi } from './api/announcementsApi'
 import { expenseApi } from './api/expenseApi'
+import { pmsApi } from './api/pmsApi'
 
 export const store = configureStore({
   reducer: {
@@ -33,6 +34,7 @@ export const store = configureStore({
     [attendanceApi.reducerPath]: attendanceApi.reducer,
     [announcementsApi.reducerPath]: announcementsApi.reducer,
     [expenseApi.reducerPath]: expenseApi.reducer,
+    [pmsApi.reducerPath]: pmsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -47,7 +49,8 @@ export const store = configureStore({
       .concat(orgDocumentsApi.middleware)
       .concat(attendanceApi.middleware)
       .concat(announcementsApi.middleware)
-      .concat(expenseApi.middleware),
+      .concat(expenseApi.middleware)
+      .concat(pmsApi.middleware),
 })
 
 export type RootState = ReturnType<typeof store.getState>
@@ -69,4 +72,5 @@ export function resetAllApiState(dispatch: AppDispatch) {
   dispatch(attendanceApi.util.resetApiState())
   dispatch(announcementsApi.util.resetApiState())
   dispatch(expenseApi.util.resetApiState())
+  dispatch(pmsApi.util.resetApiState())
 }

@@ -52,6 +52,22 @@ const SUB_ROUTE_PARENTS: Array<{
   defaultDetail: string
 }> = [
   {
+    // Goal template wizard / view - /pms/configuration/goal-templates/new, /<id>[/edit].
+    prefix: '/pms/configuration/goal-templates/',
+    listPath: '/pms/configuration/goal-templates',
+    parentLabel: 'Configuration',
+    listLabel: 'Goal Templates',
+    defaultDetail: 'New Template',
+  },
+  {
+    // PMS cycle wizard / view / activated — /pms/cycle/new, /pms/cycle/<id>[/edit|/activated].
+    prefix: '/pms/cycle/',
+    listPath: '/pms/cycle',
+    parentLabel: 'PMS Cycle',
+    listLabel: 'Initiate Appraisal',
+    defaultDetail: 'New Appraisal',
+  },
+  {
     prefix: '/leave-management/work-calendar/',
     listPath: '/leave-management/work-calendar',
     parentLabel: 'Leave Setup',
@@ -114,6 +130,19 @@ const STANDALONE_LABELS: Record<string, string> = {
   '/my-announcements': 'Announcements',
 }
 
+/** PMS > Configuration > KRA Master style crumbs for routes nested in the menu. */
+function findNestedBreadcrumb(pathname: string): BreadcrumbSegment[] | null {
+  for (const section of sidebarMenuConfig) {
+    for (const group of section.groups) {
+      for (const child of group.children) {
+        const sub = child.children?.find((c) => c.path === pathname)
+        if (sub) return [{ label: group.label }, { label: child.label }, { label: sub.label }]
+      }
+    }
+  }
+  return null
+}
+
 // ─── Resolve breadcrumb from route ────────────────────────────────────────────
 
 function useBreadcrumb(): BreadcrumbSegment[] {
@@ -156,6 +185,10 @@ function useBreadcrumb(): BreadcrumbSegment[] {
         }
       }
     }
+
+    // 1b. Items nested one level down (e.g. PMS > Configuration > KRA Master)
+    const nested = findNestedBreadcrumb(location.pathname)
+    if (nested) return nested
 
     // 2. Try prefix/regex match for sub-routes (add/edit pages under a list)
     for (const sub of SUB_ROUTE_PARENTS) {

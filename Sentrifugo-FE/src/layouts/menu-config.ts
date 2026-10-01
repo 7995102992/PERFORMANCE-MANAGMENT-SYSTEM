@@ -14,6 +14,19 @@ import {
   Receipt,
   Building2,
   Users,
+  CalendarRange,
+  ListChecks,
+  Target,
+  Star,
+  ListFilter,
+  Zap,
+  User,
+  CheckCircle2,
+  RefreshCw,
+  Flag,
+  FileText,
+  UserCog,
+  Archive,
 } from "lucide-react";
 
 export type Permission = string;
@@ -156,6 +169,37 @@ export const sidebarMenuConfig: MenuSection[] = [
             moduleKey: "leave_management",
             permission: "view_employee_reports",
           },
+        ],
+      },
+      {
+        key: "pms",
+        label: "PMS Cycle",
+        icon: CalendarRange,
+        // PMS has no IAM module yet. Corporate HR ~ admin until `performance_management`
+        // permission codes exist - then swap `minRole` for `moduleKey` + `permission`.
+        children: [
+          {
+            key: "pms-configuration",
+            label: "Configuration",
+            icon: Settings,
+            children: [
+              { key: "pms-goal-templates", label: "Goal Templates", path: "/pms/configuration/goal-templates", icon: ListChecks, minRole: "admin" },
+              { key: "pms-kra-master", label: "KRA Master", path: "/pms/configuration/kra-master", icon: Target, minRole: "admin" },
+              { key: "pms-kpi-master", label: "KPI Master", path: "/pms/configuration/kpi-master", icon: ListChecks, minRole: "admin" },
+              { key: "pms-competency-master", label: "Competency Master", path: "/pms/configuration/competency-master", icon: Star, minRole: "admin" },
+              { key: "pms-rating-scale", label: "Rating Scale", path: "/pms/configuration/rating-scale", icon: ListFilter, minRole: "admin" },
+            ],
+          },
+          { key: "pms-initiate-appraisal", label: "Initiate Appraisal", path: "/pms/cycle", icon: Zap, minRole: "admin" },
+          { key: "pms-my-goals", label: "My Goals", path: "/pms/my-goals", icon: Target, minRole: "admin" },
+          { key: "pms-self-appraisal", label: "Self Appraisal", path: "/pms/self-appraisal", icon: User, minRole: "admin" },
+          { key: "pms-goal-approvals", label: "Goal Approvals", path: "/pms/goal-approvals", icon: CheckCircle2, minRole: "admin" },
+          { key: "pms-target-revisions", label: "Target Revisions", path: "/pms/target-revisions", icon: RefreshCw, minRole: "admin" },
+          { key: "pms-mid-year-review", label: "Mid-Year Review", path: "/pms/mid-year-review", icon: Flag, minRole: "admin" },
+          { key: "pms-team-appraisal", label: "Team Appraisal", path: "/pms/team-appraisal", icon: CalendarCheck, minRole: "admin" },
+          { key: "pms-appraisal-history", label: "Appraisal History", path: "/pms/appraisal-history", icon: FileText, minRole: "admin" },
+          { key: "pms-lock-access", label: "Lock Access", path: "/pms/lock-access", icon: UserCog, minRole: "admin" },
+          { key: "pms-cycle-closure", label: "Cycle Closure", path: "/pms/cycle-closure", icon: Archive, minRole: "admin" },
         ],
       },
       {

@@ -126,6 +126,18 @@ import { EmployeesListPage } from "./pages/hr/employees/EmployeesListPage";
 import { EmployeeForm } from "./pages/hr/employees/EmployeeForm";
 import EmployeeLeaveReportPage from "./pages/hr/leave-reports/EmployeeLeaveReportPage";
 
+// PMS
+import PmsCycleList from "./pages/pms/cycle/PmsCycleList";
+import InitiateAppraisal from "./pages/pms/cycle/InitiateAppraisal";
+import CycleActivated from "./pages/pms/cycle/CycleActivated";
+import GoalTemplateList from "./pages/pms/configuration/goal-templates/GoalTemplateList";
+import GoalTemplateWizard from "./pages/pms/configuration/goal-templates/GoalTemplateWizard";
+import KraMaster from "./pages/pms/configuration/kra-master/KraMaster";
+import KpiMaster from "./pages/pms/configuration/kpi-master/KpiMaster";
+import CompetencyMaster from "./pages/pms/configuration/competency-master/CompetencyMaster";
+import RatingScale from "./pages/pms/configuration/rating-scale/RatingScale";
+import PmsComingSoon from "./pages/pms/PmsComingSoon";
+
 // Settings
 import OrganisationSettings from "./pages/settings/OrganisationSettings";
 
@@ -786,6 +798,63 @@ const policiesDocumentsRoute = createRoute({
   component: PoliciesDocuments,
 });
 
+// PMS Cycle — list, 4-step wizard (new / edit), read-only view, activation result.
+const pmsCycleListRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: "/pms/cycle",
+  component: PmsCycleList,
+});
+
+const pmsCycleNewRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: "/pms/cycle/new",
+  component: () => <InitiateAppraisal />,
+});
+
+const pmsCycleViewRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: "/pms/cycle/$cycleId",
+  component: () => <InitiateAppraisal readOnly />,
+});
+
+const pmsCycleEditRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: "/pms/cycle/$cycleId/edit",
+  component: () => <InitiateAppraisal />,
+});
+
+const pmsCycleActivatedRoute = createRoute({
+  getParentRoute: () => adminLayoutRoute,
+  path: "/pms/cycle/$cycleId/activated",
+  component: CycleActivated,
+});
+
+// PMS Configuration - masters, rating scale and goal templates.
+const pmsRoute = <P extends string>(path: P, component: () => React.JSX.Element) =>
+  createRoute({ getParentRoute: () => adminLayoutRoute, path, component });
+
+const pmsGoalTemplatesRoute = pmsRoute("/pms/configuration/goal-templates", () => <GoalTemplateList />);
+const pmsGoalTemplateNewRoute = pmsRoute("/pms/configuration/goal-templates/new", () => <GoalTemplateWizard />);
+const pmsGoalTemplateViewRoute = pmsRoute("/pms/configuration/goal-templates/$templateId", () => <GoalTemplateWizard readOnly />);
+const pmsGoalTemplateEditRoute = pmsRoute("/pms/configuration/goal-templates/$templateId/edit", () => <GoalTemplateWizard />);
+const pmsKraMasterRoute = pmsRoute("/pms/configuration/kra-master", () => <KraMaster />);
+const pmsKpiMasterRoute = pmsRoute("/pms/configuration/kpi-master", () => <KpiMaster />);
+const pmsCompetencyMasterRoute = pmsRoute("/pms/configuration/competency-master", () => <CompetencyMaster />);
+const pmsRatingScaleRoute = pmsRoute("/pms/configuration/rating-scale", () => <RatingScale />);
+
+// Menu entries whose screens are not designed yet.
+const pmsPlaceholderRoutes = [
+  "my-goals",
+  "self-appraisal",
+  "goal-approvals",
+  "target-revisions",
+  "mid-year-review",
+  "team-appraisal",
+  "appraisal-history",
+  "lock-access",
+  "cycle-closure",
+].map((slug) => pmsRoute(`/pms/${slug}`, () => <PmsComingSoon />));
+
 const announcementsRoute = createRoute({
   getParentRoute: () => adminLayoutRoute,
   path: "/announcements",
@@ -1067,6 +1136,20 @@ const routeTree = rootRoute.addChildren([
     myJourneyRoute,
     teamJourneyRoute,
     policiesDocumentsRoute,
+    pmsCycleListRoute,
+    pmsCycleNewRoute,
+    pmsCycleViewRoute,
+    pmsCycleEditRoute,
+    pmsCycleActivatedRoute,
+    pmsGoalTemplatesRoute,
+    pmsGoalTemplateNewRoute,
+    pmsGoalTemplateViewRoute,
+    pmsGoalTemplateEditRoute,
+    pmsKraMasterRoute,
+    pmsKpiMasterRoute,
+    pmsCompetencyMasterRoute,
+    pmsRatingScaleRoute,
+    ...pmsPlaceholderRoutes,
     announcementsRoute,
     announcementDetailRoute,
     myAnnouncementsRoute,
