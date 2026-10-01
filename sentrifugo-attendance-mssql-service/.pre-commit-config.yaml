@@ -1,0 +1,11 @@
+repos:
+  - repo: https://github.com/semgrep/pre-commit
+    rev: 'v1.163.0'
+    hooks:
+      - id: semgrep
+        additional_dependencies:
+          - setuptools
+        args:
+          - --config=auto
+        stages:
+          - pre-commit

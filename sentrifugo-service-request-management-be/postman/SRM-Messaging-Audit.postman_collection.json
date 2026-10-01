@@ -1,0 +1,470 @@
+{
+  "info": {
+    "name": "SRM — Service Request Management (Full API)",
+    "description": "Complete API test collection for SRM backend.\n\nSetup:\n1. Start the SRM backend: `uvicorn src.main:app --reload`\n2. Ensure MongoDB and RabbitMQ are accessible\n3. Set `base_url` and `auth_token` collection variables\n4. For stub mode (no IAM), set `dev_session` header in pre-request scripts",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8000" },
+    { "key": "api_prefix", "value": "/api/v1/service-requests" },
+    { "key": "auth_token", "value": "", "description": "Session access token from IAM login" },
+    { "key": "internal_token", "value": "dev-internal-token" },
+    { "key": "dev_session", "value": "{\"id\":\"user_001\",\"organisation_id\":\"org_001\",\"email\":\"admin@test.com\",\"display_name\":\"Admin\",\"is_super_admin\":true,\"permissions\":[\"service_request_management:*\"],\"roles\":[\"super_admin\"]}", "description": "JSON session for X-SRM-Dev-Session (stub mode only)" },
+    { "key": "category_id", "value": "" },
+    { "key": "request_type_id", "value": "" },
+    { "key": "workflow_id", "value": "" },
+    { "key": "service_request_id", "value": "" },
+    { "key": "comment_id", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{auth_token}}" }]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          "// In stub mode (IAM_BASE_URL empty), attach X-SRM-Dev-Session header",
+          "const devSession = pm.collectionVariables.get('dev_session');",
+          "if (devSession) {",
+          "  pm.request.headers.add({ key: 'X-SRM-Dev-Session', value: devSession });",
+          "}"
+        ],
+        "type": "text/javascript"
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /healthz",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/healthz" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 ok', () => { pm.response.to.have.status(200); pm.expect(pm.response.json().status).to.eql('ok'); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /readyz",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}/readyz" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 + mongo + rabbitmq', () => { pm.response.to.have.status(200); const b = pm.response.json(); pm.expect(b).to.have.property('mongo'); pm.expect(b).to.have.property('rabbitmq'); });"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "GET /categories (list)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/categories?status=active&page=1&page_size=20" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /categories (search)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/categories?q=IT&status=all" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /categories (by department)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/categories?department_id=dept_001" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /categories (create)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"IT Support\",\n  \"description\": \"IT infrastructure and software support\",\n  \"department_id\": \"dept_001\"\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/categories" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('201 created', () => { pm.expect(pm.response.code).to.be.oneOf([200,201]); const b = pm.response.json(); if(b.id) pm.collectionVariables.set('category_id', b.id); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /categories/:id",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/categories/{{category_id}}" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "PUT /categories/:id (update)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"IT Support (Updated)\",\n  \"description\": \"Updated description\"\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/categories/{{category_id}}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "DELETE /categories/:id",
+          "request": { "method": "DELETE", "url": { "raw": "{{base_url}}{{api_prefix}}/categories/{{category_id}}" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('204', () => pm.expect(pm.response.code).to.be.oneOf([200,204]));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /categories/active",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/categories/active" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /categories/:id/request-types/active",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/categories/{{category_id}}/request-types/active" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "Request Types",
+      "item": [
+        {
+          "name": "POST /request-types (create)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"category_id\": \"{{category_id}}\",\n  \"name\": \"Laptop Issue\",\n  \"description\": \"Hardware problems\",\n  \"sla_rules\": [\n    { \"priority\": \"low\", \"first_response_minutes\": 60, \"resolution_minutes\": 480 },\n    { \"priority\": \"high\", \"first_response_minutes\": 15, \"resolution_minutes\": 120 }\n  ]\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/request-types" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('201', () => { pm.expect(pm.response.code).to.be.oneOf([200,201]); const b = pm.response.json(); if(b.id) pm.collectionVariables.set('request_type_id', b.id); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /request-types (list)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/request-types?page=1&page_size=20" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /request-types (by category)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/request-types?category_id={{category_id}}" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /request-types/:id",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/request-types/{{request_type_id}}" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "PUT /request-types/:id (update)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Laptop Issue (Updated)\",\n  \"description\": \"Updated hardware problems\"\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/request-types/{{request_type_id}}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "DELETE /request-types/:id",
+          "request": { "method": "DELETE", "url": { "raw": "{{base_url}}{{api_prefix}}/request-types/{{request_type_id}}" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('204', () => pm.expect(pm.response.code).to.be.oneOf([200,204]));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /request-types/:id/sla-preview",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/request-types/{{request_type_id}}/sla-preview?priority=low" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /request-types/:id/primary-assignee-preview",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/request-types/{{request_type_id}}/primary-assignee-preview" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "Workflows",
+      "item": [
+        {
+          "name": "POST /workflows (create)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"category_id\": \"{{category_id}}\",\n  \"request_type_id\": \"{{request_type_id}}\",\n  \"approval_required\": true,\n  \"approval_levels\": [\n    {\n      \"level_index\": 1,\n      \"logic\": \"and\",\n      \"approvers\": [\n        { \"approver_user_id\": \"user_approver_001\" }\n      ]\n    }\n  ],\n  \"escalation_config\": {\n    \"auto_escalate_enabled\": false\n  }\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/workflows" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('201', () => { pm.expect(pm.response.code).to.be.oneOf([200,201]); const b = pm.response.json(); if(b.id) pm.collectionVariables.set('workflow_id', b.id); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /workflows (list)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/workflows?page=1&page_size=20" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /workflows (by category)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/workflows?category_id={{category_id}}" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /workflows (by request type)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/workflows?request_type_id={{request_type_id}}" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /workflows/:id",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/workflows/{{workflow_id}}" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "PUT /workflows/:id (update)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"category_id\": \"{{category_id}}\",\n  \"request_type_id\": \"{{request_type_id}}\",\n  \"approval_required\": true,\n  \"approval_levels\": [\n    {\n      \"level_index\": 1,\n      \"logic\": \"and\",\n      \"approvers\": [\n        { \"approver_user_id\": \"user_approver_001\" },\n        { \"approver_user_id\": \"user_approver_002\" }\n      ]\n    }\n  ],\n  \"escalation_config\": {\n    \"auto_escalate_enabled\": false\n  }\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/workflows/{{workflow_id}}" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /workflows/:id/activate",
+          "request": { "method": "POST", "url": { "raw": "{{base_url}}{{api_prefix}}/workflows/{{workflow_id}}/activate" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /workflows/:id/deactivate",
+          "request": { "method": "POST", "url": { "raw": "{{base_url}}{{api_prefix}}/workflows/{{workflow_id}}/deactivate" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "DELETE /workflows/:id",
+          "request": { "method": "DELETE", "url": { "raw": "{{base_url}}{{api_prefix}}/workflows/{{workflow_id}}" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('204', () => pm.expect(pm.response.code).to.be.oneOf([200,204]));"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "Service Requests",
+      "item": [
+        {
+          "name": "POST /requests (create — multipart form)",
+          "request": {
+            "method": "POST",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "body", "value": "{\"category_id\":\"{{category_id}}\",\"request_type_id\":\"{{request_type_id}}\",\"priority\":\"medium\",\"title\":\"Laptop not booting\",\"description\":\"My laptop shows a black screen after login\"}", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/requests" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('201', () => { pm.expect(pm.response.code).to.be.oneOf([200,201]); const b = pm.response.json(); const id = b.id || (b.data && b.data.id); if(id) pm.collectionVariables.set('service_request_id', id); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /requests/json (create — JSON)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Idempotency-Key", "value": "test-idemp-key-001" }],
+            "body": { "mode": "raw", "raw": "{\n  \"category_id\": \"{{category_id}}\",\n  \"request_type_id\": \"{{request_type_id}}\",\n  \"priority\": \"high\",\n  \"title\": \"Software license expired\",\n  \"description\": \"My Adobe Creative Suite license expired and I need it renewed urgently\"\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/requests/json" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('201', () => { pm.expect(pm.response.code).to.be.oneOf([200,201]); const b = pm.response.json(); const id = b.id || (b.data && b.data.id); if(id) pm.collectionVariables.set('service_request_id', id); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests (list)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests?page=1&page_size=20" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests (filter by status)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests?status=submitted&status_group=open" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests (filter by priority)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests?priority=high" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests (search)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests?q=laptop" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests (by requester)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests?requester_user_id=user_001" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests (date range)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests?created_from=2026-01-01T00:00:00Z&created_to=2026-12-31T23:59:59Z" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests (resolved this month)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests?resolved_on=this_month" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests/:id (detail)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests/:id/attachments/:aid",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/attachments/att_001" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 or 404', () => pm.expect(pm.response.code).to.be.oneOf([200,404]));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /requests/:id/approve",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"remarks\": \"Approved — valid issue\"\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/approve" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /requests/:id/reject",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Not a valid request for our department.\"\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/reject" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /requests/:id/first-response",
+          "request": { "method": "POST", "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/first-response" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests/:id/eligible-executors",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/eligible-executors" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /requests/:id/assign-executor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"executor_user_id\": \"user_exec_001\",\n  \"notes\": \"Assigning to IT specialist\"\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/assign-executor" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /requests/:id/reassign-executor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"executor_user_id\": \"user_exec_002\",\n  \"notes\": \"Reassigning to senior specialist\"\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/reassign-executor" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests/:id/eligible-escalation-targets",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/eligible-escalation-targets" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /requests/:id/escalate",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"escalate_to_user_id\": \"user_mgr_001\",\n  \"reason\": \"SLA breach — escalating to manager for immediate resolution\"\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/escalate" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /requests/:id/resolve",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"resolution_notes\": \"Replaced laptop battery and updated BIOS firmware.\"\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/resolve" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /requests/:id/close",
+          "request": { "method": "POST", "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/close" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests/:id/comments",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/comments" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /requests/:id/comments (add)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"body\": \"I've tried restarting but the issue persists.\"\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/comments" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('201', () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests/:id/internal-notes",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/internal-notes" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /requests/:id/internal-notes (add)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"body\": \"Checked with hardware team — battery replacement needed.\"\n}" },
+            "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/internal-notes" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('201', () => pm.expect(pm.response.code).to.be.oneOf([200,201]));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests/:id/activity",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests/{{service_request_id}}/activity" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests/export (CSV)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests/export?format=csv&date_range=current_month" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200 CSV', () => { pm.response.to.have.status(200); pm.expect(pm.response.headers.get('content-type')).to.include('text/csv'); });"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "GET /requests/export (custom date range)",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/requests/export?format=csv&date_range=custom&start_date=2026-01-01&end_date=2026-04-30" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "GET /dashboard/summary",
+          "request": { "method": "GET", "url": { "raw": "{{base_url}}{{api_prefix}}/dashboard/summary" } },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        }
+      ]
+    },
+    {
+      "name": "Internal Jobs",
+      "item": [
+        {
+          "name": "POST /_internal/jobs/sla-tick",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-Internal-Token", "value": "{{internal_token}}" }],
+            "url": { "raw": "{{base_url}}{{api_prefix}}/_internal/jobs/sla-tick" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /_internal/jobs/rebuild-sla-cursor",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-Internal-Token", "value": "{{internal_token}}" }],
+            "url": { "raw": "{{base_url}}{{api_prefix}}/_internal/jobs/rebuild-sla-cursor" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('200', () => pm.response.to.have.status(200));"], "type": "text/javascript" } }]
+        },
+        {
+          "name": "POST /_internal/jobs/sla-tick (no token — 401)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}{{api_prefix}}/_internal/jobs/sla-tick" }
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('401', () => pm.response.to.have.status(401));"], "type": "text/javascript" } }]
+        }
+      ]
+    }
+  ]
+}

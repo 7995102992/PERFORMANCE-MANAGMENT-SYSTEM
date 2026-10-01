@@ -1,0 +1,11 @@
+venv
+.env 
+.*_cache
+.claude
+__pycache__
+
+# OpenBao / env (secrets — never commit)
+.env.local
+.env.qa
+.env.bak
+.bao-token

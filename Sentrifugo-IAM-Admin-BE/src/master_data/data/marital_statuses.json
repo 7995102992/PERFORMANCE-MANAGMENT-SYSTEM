@@ -1,0 +1,8 @@
+[
+  { "key": "single", "value": "Single" },
+  { "key": "married", "value": "Married" },
+  { "key": "widowed", "value": "Widowed" },
+  { "key": "divorced", "value": "Divorced" },
+  { "key": "separated", "value": "Separated" },
+  { "key": "prefer-not-to-say", "value": "Prefer Not to Say" }
+]

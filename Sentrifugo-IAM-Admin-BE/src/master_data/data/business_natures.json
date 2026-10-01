@@ -1,0 +1,13 @@
+[
+  { "key": "b2b-saas", "value": "B2B SaaS" },
+  { "key": "b2c-saas", "value": "B2C SaaS" },
+  { "key": "enterprise-solutions", "value": "Enterprise Solutions" },
+  { "key": "custom-software", "value": "Custom Software Development" },
+  { "key": "platform-based", "value": "Platform-Based" },
+  { "key": "marketplace", "value": "Marketplace" },
+  { "key": "api-services", "value": "API Services" },
+  { "key": "cloud-native", "value": "Cloud-Native" },
+  { "key": "open-source", "value": "Open Source-Based" },
+  { "key": "subscription-based", "value": "Subscription-Based" },
+  { "key": "licensing-based", "value": "Licensing-Based" }
+]

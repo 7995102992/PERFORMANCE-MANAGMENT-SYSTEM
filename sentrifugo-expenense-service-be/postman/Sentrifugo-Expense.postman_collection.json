@@ -1,0 +1,46 @@
+{
+  "info": {
+    "name": "Sentrifugo — Expense",
+    "description": "Base collection for the sentrifugo-expenense-service-be service. Set the `baseUrl`, `accessToken` and `internalApiKey` collection variables before running.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "accessToken", "value": "" },
+    { "key": "internalApiKey", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "noauth" },
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+      }
+    },
+    {
+      "name": "Me (current user)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{baseUrl}}/me", "host": ["{{baseUrl}}"], "path": ["me"] }
+      }
+    },
+    {
+      "name": "Internal — Ping",
+      "request": {
+        "method": "GET",
+        "auth": { "type": "noauth" },
+        "header": [
+          { "key": "X-Internal-Token", "value": "{{internalApiKey}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/internal/ping", "host": ["{{baseUrl}}"], "path": ["internal", "ping"] }
+      }
+    }
+  ]
+}

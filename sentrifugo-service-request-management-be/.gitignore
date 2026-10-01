@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# venv
+venv/
+.venv/
+env/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Build artifacts from HLD authoring (keep PDFs + MD/TXT specs, ignore extracts/renders)
+documentation.txt
+wireframes.txt
+workflow.txt
+wireframes_p*.png
+workflow_p*.png
+
+# OS
+.DS_Store
+Thumbs.db
+.claude/
+design_docs/
+
+# Local-only dev scripts (never commit)
+local_scripts/
+
+# Local file storage / runtime artifacts
+.storage/
+
+# OpenBao / env (secrets — never commit)
+.env.local
+.env.qa
+.env.bak
+.bao-token

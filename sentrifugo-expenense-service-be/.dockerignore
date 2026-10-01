@@ -1,0 +1,14 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+.env.*
+.git/
+.pytest_cache/
+tests/
+design_docs/
+local_scripts/
+postman/
+*.md

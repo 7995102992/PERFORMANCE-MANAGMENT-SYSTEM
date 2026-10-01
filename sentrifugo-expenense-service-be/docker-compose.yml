@@ -1,0 +1,62 @@
+# Local development stack for sentrifugo-expenense-service-be.
+# Brings up the same infrastructure the service expects in production:
+# Percona Server for MongoDB + Valkey + RabbitMQ.
+#
+#   docker compose up -d        # start infra
+#   uvicorn src.main:app --reload   # run the API against it
+#
+# The `expense` service block is provided for a full containerised run; comment
+# it out if you only want the backing services.
+services:
+  expense:
+    build: .
+    container_name: sentrifugo-expense
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    depends_on:
+      - percona
+      - valkey
+      - rabbitmq
+
+  percona:
+    image: percona/percona-server-mongodb:7.0
+    container_name: sentrifugo-expense-percona
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: sentrifugo_dev
+      MONGO_INITDB_ROOT_PASSWORD: Sentri@devdb_2026@dev
+      MONGO_INITDB_DATABASE: sentrifugo_expense
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+  valkey:
+    image: valkey/valkey:8
+    container_name: sentrifugo-expense-valkey
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey_data:/data
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    container_name: sentrifugo-expense-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"   # management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  valkey_data:
+  rabbitmq_data:

@@ -1,0 +1,2297 @@
+{
+  "info": {
+    "name": "Sentrifugo \u00e2\u20ac\u201d Timesheet Management",
+    "description": "Full API collection for the Sentrifugo Timesheet Management Service (TSM).\n\nSet the `base_url` and `auth_token` collection variables before use.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api/v1/timesheets",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "dev-token-123",
+      "type": "string"
+    },
+    {
+      "key": "dev_session",
+      "value": "{\"user_id\":\"u1\",\"org_id\":\"org1\",\"is_super_admin\":true,\"email\":\"admin@test.com\",\"full_name\":\"Admin User\",\"permissions\":{\"timesheet_management\":{\"acl\":\"admin\",\"actions\":{\"create\":true,\"read\":true,\"update\":true,\"delete\":true,\"export\":true}}}}",
+      "type": "string"
+    },
+    {
+      "key": "client_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "project_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "task_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "resource_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "timesheet_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "entry_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "task_resource_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "attachment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "internal_api_key",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Healthz",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/healthz",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "healthz"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Readyz",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8000/readyz",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8000",
+              "path": [
+                "readyz"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Clients",
+      "item": [
+        {
+          "name": "Create Client",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('client_id', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Acme Corporation\",\n    \"industry\": \"Technology\",\n    \"contact_person\": \"John Doe\",\n    \"contact_email\": \"john@acme.com\",\n    \"contact_phone\": \"+1-555-0100\",\n    \"address\": \"123 Tech Street, San Francisco, CA\",\n    \"portal_access_enabled\": true,\n    \"notes\": \"Key client for Q3 projects\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/clients",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Clients",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clients?status=active&page=1&page_size=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "25"
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Client",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clients/{{client_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients",
+                "{{client_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Client",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Acme Corporation Updated\",\n    \"industry\": \"Software\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/clients/{{client_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients",
+                "{{client_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Client",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clients/{{client_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients",
+                "{{client_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Download Import Template",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clients/template",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients",
+                "template"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bulk Import Clients",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/clients/import",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients",
+                "import"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Clients",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/clients/export",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "clients",
+                "export"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "item": [
+        {
+          "name": "Create Project",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('project_id', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"client_id\": \"{{client_id}}\",\n    \"name\": \"Website Redesign\",\n    \"code\": \"WR-2026\",\n    \"description\": \"Complete website overhaul for Acme Corp\",\n    \"project_type\": \"time_and_materials\",\n    \"start_date\": \"2026-01-01\",\n    \"end_date\": \"2026-06-30\",\n    \"budget_hours\": 500,\n    \"hourly_rate\": 150.00,\n    \"currency\": \"USD\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects?status=active&page=1&page_size=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "25"
+                },
+                {
+                  "key": "client_id",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "project_type",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Project",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Project",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Website Redesign v2\",\n    \"budget_hours\": 600\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Project",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Download Import Template",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/template",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "template"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bulk Import Projects",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/import",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "import"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/export",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "export"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Project Timeline",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/timeline",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "timeline"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "item": [
+        {
+          "name": "Create Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('task_id', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Frontend Development\",\n    \"description\": \"UI/UX development tasks\",\n    \"is_global\": true,\n    \"is_billable\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tasks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tasks?status=active&page=1&page_size=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "active"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "25"
+                },
+                {
+                  "key": "is_global",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tasks/{{task_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks",
+                "{{task_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Frontend Development Updated\",\n    \"is_billable\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/tasks/{{task_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks",
+                "{{task_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Task",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tasks/{{task_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks",
+                "{{task_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Download Import Template",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tasks/template",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks",
+                "template"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bulk Import Tasks",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/tasks/import",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks",
+                "import"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/tasks/export",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "tasks",
+                "export"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Assign Task to Project",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"task_id\": \"{{task_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/tasks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "tasks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Project Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/tasks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "tasks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Project Task",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"estimated_hours\": 40,\n    \"billable_rate\": 100.0,\n    \"notes\": \"Updated task notes\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/tasks/{{task_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export Project Tasks",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/tasks/export",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "export"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Remove Task from Project",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/tasks/{{task_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Resources",
+      "item": [
+        {
+          "name": "Assign Resource to Project",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('resource_id', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"employee_id\": \"emp1\",\n    \"role\": \"Senior Developer\",\n    \"allocation_percentage\": 100,\n    \"billable_rate\": 120.00,\n    \"is_billable\": true,\n    \"start_date\": \"2026-01-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/resources",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "resources"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Project Resources",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/resources?page=1&page_size=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "resources"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "25"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Resource",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"allocation_percentage\": 80,\n    \"billable_rate\": 130.00\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/resources/{{resource_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "resources",
+                "{{resource_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Resource",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/resources/{{resource_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "resources",
+                "{{resource_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Assign Resource to Task",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('task_resource_id', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"employee_id\": \"emp1\",\n    \"role\": \"Developer\",\n    \"allocation_percentage\": 100,\n    \"billable_rate\": 100.0,\n    \"is_billable\": true,\n    \"start_date\": \"2026-01-01\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/tasks/{{task_id}}/resources",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_id}}",
+                "resources"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Task Resources",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/tasks/{{task_id}}/resources?page=1&page_size=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_id}}",
+                "resources"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Task Resource",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"role\": \"Senior Developer\",\n    \"allocation_percentage\": 80,\n    \"billable_rate\": 150.0,\n    \"is_billable\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/tasks/{{task_id}}/resources/{{task_resource_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_id}}",
+                "resources",
+                "{{task_resource_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Task Resource",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/projects/{{project_id}}/tasks/{{task_id}}/resources/{{task_resource_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "projects",
+                "{{project_id}}",
+                "tasks",
+                "{{task_id}}",
+                "resources",
+                "{{task_resource_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Timesheets",
+      "item": [
+        {
+          "name": "Create Weekly Timesheet",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('timesheet_id', json.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"week_start_date\": \"2026-05-04\",\n    \"notes\": \"Week of May 4th\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/my-timesheets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-timesheets"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List My Timesheets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/my-timesheets?page=1&page_size=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-timesheets"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "25"
+                },
+                {
+                  "key": "timesheet_status",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Timesheet Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/my-timesheets/{{timesheet_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-timesheets",
+                "{{timesheet_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Save Entries (Bulk)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"entries\": [\n        {\n            \"project_id\": \"{{project_id}}\",\n            \"task_id\": \"{{task_id}}\",\n            \"entry_date\": \"2026-05-04\",\n            \"hours\": 8,\n            \"notes\": \"Worked on homepage redesign\"\n        },\n        {\n            \"project_id\": \"{{project_id}}\",\n            \"task_id\": \"{{task_id}}\",\n            \"entry_date\": \"2026-05-05\",\n            \"hours\": 7.5,\n            \"notes\": \"Dashboard component development\"\n        },\n        {\n            \"project_id\": \"{{project_id}}\",\n            \"task_id\": \"{{task_id}}\",\n            \"entry_date\": \"2026-05-06\",\n            \"hours\": 8,\n            \"notes\": \"API integration\"\n        },\n        {\n            \"project_id\": \"{{project_id}}\",\n            \"task_id\": \"{{task_id}}\",\n            \"entry_date\": \"2026-05-07\",\n            \"hours\": 8,\n            \"notes\": \"Testing and bug fixes\"\n        },\n        {\n            \"project_id\": \"{{project_id}}\",\n            \"task_id\": \"{{task_id}}\",\n            \"entry_date\": \"2026-05-08\",\n            \"hours\": 6,\n            \"notes\": \"Code review and documentation\"\n        }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/my-timesheets/{{timesheet_id}}/entries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-timesheets",
+                "{{timesheet_id}}",
+                "entries"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Entry",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/my-timesheets/{{timesheet_id}}/entries/{{entry_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-timesheets",
+                "{{timesheet_id}}",
+                "entries",
+                "{{entry_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit Timesheet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/my-timesheets/{{timesheet_id}}/submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-timesheets",
+                "{{timesheet_id}}",
+                "submit"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Resubmit Timesheet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/my-timesheets/{{timesheet_id}}/resubmit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-timesheets",
+                "{{timesheet_id}}",
+                "resubmit"
+              ]
+            }
+          }
+        },
+        {
+          "name": "My Timesheet Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/my-timesheets/summary",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-timesheets",
+                "summary"
+              ]
+            }
+          }
+        },
+        {
+          "name": "My Assigned Projects",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/my-timesheets/assigned-projects",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-timesheets",
+                "assigned-projects"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tasks for Assigned Project",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/my-timesheets/assigned-projects/{{project_id}}/tasks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-timesheets",
+                "assigned-projects",
+                "{{project_id}}",
+                "tasks"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Attachment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.attachments && json.attachments.length > 0) {",
+                  "        pm.collectionVariables.set('attachment_id', json.attachments[0].id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"filename\": \"timesheet_evidence.pdf\",\n    \"url\": \"https://storage.example.com/attachments/timesheet_evidence.pdf\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/my-timesheets/{{timesheet_id}}/attachments",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-timesheets",
+                "{{timesheet_id}}",
+                "attachments"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Remove Attachment",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/my-timesheets/{{timesheet_id}}/attachments/{{attachment_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "my-timesheets",
+                "{{timesheet_id}}",
+                "attachments",
+                "{{attachment_id}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Approvals \u00e2\u20ac\u201d Manager (L1)",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/approvals/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "approvals",
+                "dashboard"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Team Timesheets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/approvals/timesheets?page=1&page_size=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "approvals",
+                "timesheets"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "25"
+                },
+                {
+                  "key": "timesheet_status",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "employee_id",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "View Timesheet Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/approvals/timesheets/{{timesheet_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "approvals",
+                "timesheets",
+                "{{timesheet_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve Timesheet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"comments\": \"Looks good, approved.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/approvals/timesheets/{{timesheet_id}}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "approvals",
+                "timesheets",
+                "{{timesheet_id}}",
+                "approve"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject Timesheet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"comments\": \"Hours on Thursday seem too high. Please review and resubmit.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/approvals/timesheets/{{timesheet_id}}/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "approvals",
+                "timesheets",
+                "{{timesheet_id}}",
+                "reject"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bulk Approve",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"timesheet_ids\": [\"{{timesheet_id}}\"],\n    \"comments\": \"Batch approved\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/approvals/bulk-approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "approvals",
+                "bulk-approve"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Bulk Reject",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"timesheet_ids\": [\"{{timesheet_id}}\"],\n    \"comments\": \"Missing task details. Please update and resubmit.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/approvals/bulk-reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "approvals",
+                "bulk-reject"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Client Portal (L2)",
+      "item": [
+        {
+          "name": "List Timesheets for Review",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/client-portal/timesheets?page=1&page_size=25",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "client-portal",
+                "timesheets"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "page_size",
+                  "value": "25"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "View Timesheet Detail",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/client-portal/timesheets/{{timesheet_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "client-portal",
+                "timesheets",
+                "{{timesheet_id}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Client Approve",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"comments\": \"All hours verified against Jira.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/client-portal/timesheets/{{timesheet_id}}/approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "client-portal",
+                "timesheets",
+                "{{timesheet_id}}",
+                "approve"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Client Reject",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"comments\": \"Duplicate entries found for Tuesday. Please correct and resubmit.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/client-portal/timesheets/{{timesheet_id}}/reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "client-portal",
+                "timesheets",
+                "{{timesheet_id}}",
+                "reject"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Client Bulk Approve",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"timesheet_ids\": [\"{{timesheet_id}}\"],\n    \"comments\": \"Batch approved by client\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/client-portal/bulk-approve",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "client-portal",
+                "bulk-approve"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Client Bulk Reject",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"timesheet_ids\": [\"{{timesheet_id}}\"],\n    \"comments\": \"Missing detailed notes for Wednesday's work.\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/client-portal/bulk-reject",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "client-portal",
+                "bulk-reject"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "name": "Get Settings (Global)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "settings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Settings (Project-Specific)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/settings?project_id={{project_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "settings"
+              ],
+              "query": [
+                {
+                  "key": "project_id",
+                  "value": "{{project_id}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Hour Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"daily_restrictions_enabled\": true,\n    \"min_hours_per_day\": 4,\n    \"max_hours_per_day\": 12,\n    \"deduct_leave_daily\": false,\n    \"weekly_restrictions_enabled\": true,\n    \"standard_hours_per_day\": 8,\n    \"max_hours_per_week\": 45,\n    \"deduct_leave_weekly\": false,\n    \"show_hours_type\": \"gross\",\n    \"shortage_penalty_enabled\": false,\n    \"penalty_percentage\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/settings/hours",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "settings",
+                "hours"
+              ],
+              "query": [
+                {
+                  "key": "project_id",
+                  "value": "{{project_id}}",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Submission Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"daily_time_entry_enabled\": false,\n    \"allow_past_due_submission\": true,\n    \"limit_older_than_weeks_enabled\": false,\n    \"limit_older_than_weeks\": 4,\n    \"limit_timesheets_to_enabled\": false,\n    \"limit_timesheets_to_value\": 2,\n    \"limit_timesheets_to_unit\": \"days\",\n    \"restrict_time_off_entries\": false,\n    \"allow_attachment\": true,\n    \"submission_compliance_type\": \"weekly\",\n    \"submission_deadline_hours\": 15,\n    \"submission_day\": \"friday\",\n    \"submission_time\": \"18:00\",\n    \"auto_submit_enabled\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/settings/submission",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "settings",
+                "submission"
+              ],
+              "query": [
+                {
+                  "key": "project_id",
+                  "value": "{{project_id}}",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Approval Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"approval_required\": true,\n    \"allow_future_entries\": false,\n    \"allow_past_entries_days\": 30,\n    \"levels\": [\n        {\n            \"level\": 1,\n            \"approver_role\": \"team_lead\",\n            \"approver_id\": \"mgr1\"\n        },\n        {\n            \"level\": 2,\n            \"approver_role\": \"project_manager\",\n            \"approver_id\": \"mgr2\"\n        }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/settings/approval",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "settings",
+                "approval"
+              ],
+              "query": [
+                {
+                  "key": "project_id",
+                  "value": "{{project_id}}",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Internal",
+      "item": [
+        {
+          "name": "Auto-Submit Pending Timesheets",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "X-Internal-Key",
+                "value": "{{internal_api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/internal/timesheets/auto-submit",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "internal",
+                "timesheets",
+                "auto-submit"
+              ]
+            },
+            "description": "Trigger auto-submission of all past-deadline DRAFT timesheets for organisations with auto_submit_enabled=true. Requires X-Internal-Key header matching INTERNAL_API_KEY env var."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Project Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/project-summary",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "project-summary"
+              ],
+              "query": [
+                {
+                  "key": "client_id",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Employee Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-TSM-Dev-Session",
+                "value": "{{dev_session}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reports/employee-summary",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reports",
+                "employee-summary"
+              ],
+              "query": [
+                {
+                  "key": "project_id",
+                  "value": "",
+                  "disabled": true
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

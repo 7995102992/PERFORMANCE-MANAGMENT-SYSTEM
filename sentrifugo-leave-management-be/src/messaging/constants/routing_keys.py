@@ -1,0 +1,35 @@
+class RoutingKeys:
+    # Business (inbound from IAM legacy synced queues)
+    USER_CREATED = "iam.user.created.v1"
+    DEPARTMENT_SYNCED = "iam.department.synced.v1"
+    BUSINESS_UNIT_SYNCED = "iam.business_unit.synced.v1"
+
+    # IAM domain events (inbound from domain_events exchange)
+    EMPLOYEE_CREATED = "employee.created"
+    EMPLOYEE_UPDATED = "employee.updated"
+    EMPLOYEE_DELETED = "employee.deleted"
+    BUSINESS_UNIT_CREATED = "business_unit.created"
+    BUSINESS_UNIT_UPDATED = "business_unit.updated"
+    BUSINESS_UNIT_DELETED = "business_unit.deleted"
+    DEPARTMENT_CREATED = "department.created"
+    DEPARTMENT_UPDATED = "department.updated"
+    DEPARTMENT_DELETED = "department.deleted"
+    DESIGNATION_CREATED = "designation.created"
+    DESIGNATION_UPDATED = "designation.updated"
+    DESIGNATION_DELETED = "designation.deleted"
+    ORGANISATION_CREATED = "organisation.created"
+    ORGANISATION_UPDATED = "organisation.updated"
+    ORGANISATION_DELETED = "organisation.deleted"
+    POLICY_CREATED = "policy.created"
+    POLICY_DELETED = "policy.deleted"
+    DOMAIN_USER_CREATED = "user.created"
+    DOMAIN_USER_UPDATED = "user.updated"
+    DOMAIN_USER_DELETED = "user.deleted"
+
+    # Master data events
+    EMPLOYMENT_STATUS_CREATED = "employment_status.created"
+    EMPLOYMENT_STATUS_UPDATED = "employment_status.updated"
+    EMPLOYMENT_STATUS_DELETED = "employment_status.deleted"
+    EMPLOYMENT_TYPE_CREATED = "employment_type.created"
+    EMPLOYMENT_TYPE_UPDATED = "employment_type.updated"
+    EMPLOYMENT_TYPE_DELETED = "employment_type.deleted"

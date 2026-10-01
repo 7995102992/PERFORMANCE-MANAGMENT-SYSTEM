@@ -1,0 +1,5 @@
+[
+  { "key": "allocated-to-project", "value": "Allocated to Project", "isActive": true },
+  { "key": "bench", "value": "Bench", "isActive": true },
+  { "key": "long-leave", "value": "Long Leave", "isActive": true }
+]

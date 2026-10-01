@@ -1,0 +1,20 @@
+[
+  { "key": "software-engineer", "value": "Software Engineer" },
+  { "key": "frontend-developer", "value": "Frontend Developer" },
+  { "key": "backend-developer", "value": "Backend Developer" },
+  { "key": "full-stack-developer", "value": "Full Stack Developer" },
+  { "key": "devops-engineer", "value": "DevOps Engineer" },
+  { "key": "qa-test-engineer", "value": "QA / Test Engineer" },
+  { "key": "automation-tester", "value": "Automation Tester" },
+  { "key": "data-scientist", "value": "Data Scientist" },
+  { "key": "data-analyst", "value": "Data Analyst" },
+  { "key": "ml-engineer", "value": "ML Engineer" },
+  { "key": "ui-ux-designer", "value": "UI/UX Designer" },
+  { "key": "product-manager", "value": "Product Manager" },
+  { "key": "project-manager", "value": "Project Manager" },
+  { "key": "business-analyst", "value": "Business Analyst" },
+  { "key": "system-administrator", "value": "System Administrator" },
+  { "key": "security-engineer", "value": "Security Engineer" },
+  { "key": "mobile-developer", "value": "Mobile Developer (iOS/Android)" },
+  { "key": "technical-support", "value": "Technical Support Engineer" }
+]

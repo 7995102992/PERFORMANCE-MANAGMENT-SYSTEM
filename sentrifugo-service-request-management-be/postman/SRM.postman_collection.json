@@ -1,0 +1,817 @@
+{
+  "info": {
+    "name": "Sentrifugo SRM - Service Request Management",
+    "description": "Postman collection for the Sentrifugo Service Request Management backend (FastAPI). Covers health, categories, request types, workflows, requests, dashboard, and internal jobs.\n\n## Setup\n1. Set the `baseUrl` variable to your server (default `http://localhost:8000`).\n2. Set `apiPrefix` (default `/api/v1/service-requests`).\n3. For user-auth endpoints set `accessToken` (Authorization: Bearer ...) OR set `devSession` to a JSON session (used as `X-SRM-Dev-Session` header) when running with `IAM_BASE_URL` empty.\n4. For internal job endpoints set `internalToken` (matches `INTERNAL_TOKEN` env var).\n\nIDs (`categoryId`, `requestTypeId`, `workflowId`, `requestId`, `attachmentId`, `commentId`) are auto-captured from create responses where possible; otherwise set them manually.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "apiPrefix", "value": "/api/v1/service-requests" },
+    { "key": "iamBaseUrl", "value": "http://localhost:8001" },
+    { "key": "loginEmail", "value": "admin@example.com" },
+    { "key": "loginPassword", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "accessToken", "value": "" },
+    { "key": "devSession", "value": "{\"user_id\":\"u1\",\"organisation_id\":\"o1\",\"email\":\"admin@example.com\",\"display_name\":\"Admin\",\"is_super_admin\":true,\"permissions\":[\"service_request_management:read\",\"service_request_management:create\",\"service_request_management:update\",\"service_request_management:delete\"],\"roles\":[\"admin\"]}" },
+    { "key": "internalToken", "value": "" },
+    { "key": "categoryId", "value": "" },
+    { "key": "requestTypeId", "value": "" },
+    { "key": "workflowId", "value": "" },
+    { "key": "requestId", "value": "" },
+    { "key": "attachmentId", "value": "" },
+    { "key": "commentId", "value": "" },
+    { "key": "departmentId", "value": "dept-1" },
+    { "key": "userId", "value": "u1" },
+    { "key": "executorUserId", "value": "u2" },
+    { "key": "approverUserId", "value": "u3" },
+    { "key": "escalateToUserId", "value": "u4" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "IAM Auth (sibling service)",
+      "description": "Endpoints exposed by the Sentrifugo-IAM-Admin-BE service. The client logs in HERE; the resulting access_token is then sent as Authorization: Bearer to SRM. Set iamBaseUrl to wherever IAM is running (default http://localhost:8001 — change if IAM runs on a different port).",
+      "item": [
+        {
+          "name": "Login (tenant)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  try {",
+                  "    var j = pm.response.json();",
+                  "    if (j.access_token) pm.collectionVariables.set('accessToken', j.access_token);",
+                  "    if (j.refresh_token) pm.collectionVariables.set('refreshToken', j.refresh_token);",
+                  "  } catch(e) {}",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{loginEmail}}\",\n  \"password\": \"{{loginPassword}}\"\n}" },
+            "url": { "raw": "{{iamBaseUrl}}/auth/login", "host": ["{{iamBaseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Login (super-admin portal)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  try {",
+                  "    var j = pm.response.json();",
+                  "    if (j.access_token) pm.collectionVariables.set('accessToken', j.access_token);",
+                  "    if (j.refresh_token) pm.collectionVariables.set('refreshToken', j.refresh_token);",
+                  "  } catch(e) {}",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{loginEmail}}\",\n  \"password\": \"{{loginPassword}}\"\n}" },
+            "url": { "raw": "{{iamBaseUrl}}/auth/portal/login", "host": ["{{iamBaseUrl}}"], "path": ["auth", "portal", "login"] }
+          }
+        },
+        {
+          "name": "Refresh token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  try {",
+                  "    var j = pm.response.json();",
+                  "    if (j.access_token) pm.collectionVariables.set('accessToken', j.access_token);",
+                  "    if (j.refresh_token) pm.collectionVariables.set('refreshToken', j.refresh_token);",
+                  "  } catch(e) {}",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refresh_token\": \"{{refreshToken}}\"\n}" },
+            "url": { "raw": "{{iamBaseUrl}}/auth/refresh", "host": ["{{iamBaseUrl}}"], "path": ["auth", "refresh"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{iamBaseUrl}}/auth/logout", "host": ["{{iamBaseUrl}}"], "path": ["auth", "logout"] }
+          }
+        },
+        {
+          "name": "Me (current user)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{iamBaseUrl}}/auth/me", "host": ["{{iamBaseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Activate account",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<activation-token-from-email>\",\n  \"password\": \"NewPassw0rd!\"\n}" },
+            "url": { "raw": "{{iamBaseUrl}}/auth/activate", "host": ["{{iamBaseUrl}}"], "path": ["auth", "activate"] }
+          }
+        },
+        {
+          "name": "Resend activation",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{loginEmail}}\"\n}" },
+            "url": { "raw": "{{iamBaseUrl}}/auth/resend-activation", "host": ["{{iamBaseUrl}}"], "path": ["auth", "resend-activation"] }
+          }
+        },
+        {
+          "name": "Forgot password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"{{loginEmail}}\"\n}" },
+            "url": { "raw": "{{iamBaseUrl}}/auth/forgot-password", "host": ["{{iamBaseUrl}}"], "path": ["auth", "forgot-password"] }
+          }
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<reset-token-from-email>\",\n  \"new_password\": \"NewPassw0rd!\"\n}" },
+            "url": { "raw": "{{iamBaseUrl}}/auth/reset-password", "host": ["{{iamBaseUrl}}"], "path": ["auth", "reset-password"] }
+          }
+        },
+        {
+          "name": "Change password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"current_password\": \"OldPassw0rd!\",\n  \"new_password\": \"NewPassw0rd!\"\n}" },
+            "url": { "raw": "{{iamBaseUrl}}/auth/change-password", "host": ["{{iamBaseUrl}}"], "path": ["auth", "change-password"] }
+          }
+        },
+        {
+          "name": "Confirm email change",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"<email-change-token>\"\n}" },
+            "url": { "raw": "{{iamBaseUrl}}/auth/confirm-email-change", "host": ["{{iamBaseUrl}}"], "path": ["auth", "confirm-email-change"] }
+          }
+        },
+        {
+          "name": "Azure AD login URL",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{iamBaseUrl}}/auth/azure/login", "host": ["{{iamBaseUrl}}"], "path": ["auth", "azure", "login"] }
+          }
+        },
+        {
+          "name": "Azure AD callback",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"code\": \"<azure-auth-code>\"\n}" },
+            "url": { "raw": "{{iamBaseUrl}}/auth/azure/callback", "host": ["{{iamBaseUrl}}"], "path": ["auth", "azure", "callback"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /healthz",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/healthz", "host": ["{{baseUrl}}"], "path": ["healthz"] }
+          }
+        },
+        {
+          "name": "GET /readyz",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/readyz", "host": ["{{baseUrl}}"], "path": ["readyz"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "List categories",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/categories?page=1&page_size=25&status=active",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["categories"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "page_size", "value": "25" },
+                { "key": "q", "value": "", "disabled": true },
+                { "key": "status", "value": "active" },
+                { "key": "department_id", "value": "{{departmentId}}", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List active categories",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/categories/active", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["categories", "active"] }
+          }
+        },
+        {
+          "name": "Create category",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["if (pm.response.code === 201) { try { pm.collectionVariables.set('categoryId', pm.response.json().id); } catch(e){} }"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"IT Support\",\n  \"description\": \"All IT related requests\",\n  \"department_id\": \"{{departmentId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/categories", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["categories"] }
+          }
+        },
+        {
+          "name": "Get category by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/categories/{{categoryId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["categories", "{{categoryId}}"] }
+          }
+        },
+        {
+          "name": "Update category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"IT Support Updated\",\n  \"status\": \"active\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/categories/{{categoryId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["categories", "{{categoryId}}"] }
+          }
+        },
+        {
+          "name": "Delete category",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/categories/{{categoryId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["categories", "{{categoryId}}"] }
+          }
+        },
+        {
+          "name": "List active request types for category",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/categories/{{categoryId}}/request-types/active", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["categories", "{{categoryId}}", "request-types", "active"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Request Types",
+      "item": [
+        {
+          "name": "Create request type",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["if (pm.response.code === 201) { try { pm.collectionVariables.set('requestTypeId', pm.response.json().id); } catch(e){} }"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": \"{{categoryId}}\",\n  \"name\": \"Laptop Issue\",\n  \"description\": \"Hardware/software issues with laptop\",\n  \"status\": \"active\",\n  \"sla_rules\": [\n    {\n      \"priority\": \"low\",\n      \"first_response_minutes\": 240,\n      \"resolution_minutes\": 2880,\n      \"business_hours_only\": true,\n      \"description\": \"Low priority SLA\",\n      \"violation_actions\": [\"send_alert\"],\n      \"notification_recipients\": [],\n      \"status\": \"active\"\n    },\n    {\n      \"priority\": \"high\",\n      \"first_response_minutes\": 30,\n      \"resolution_minutes\": 240,\n      \"business_hours_only\": false,\n      \"description\": \"High priority SLA\",\n      \"violation_actions\": [\"send_alert\", \"send_notification\"],\n      \"notification_recipients\": [],\n      \"status\": \"active\"\n    }\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/request-types", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["request-types"] }
+          }
+        },
+        {
+          "name": "List request types",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/request-types?page=1&page_size=25",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["request-types"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "page_size", "value": "25" },
+                { "key": "q", "value": "", "disabled": true },
+                { "key": "category_id", "value": "{{categoryId}}", "disabled": true },
+                { "key": "priority", "value": "high", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get request type by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/request-types/{{requestTypeId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["request-types", "{{requestTypeId}}"] }
+          }
+        },
+        {
+          "name": "Update request type",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Laptop Issue v2\",\n  \"status\": \"active\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/request-types/{{requestTypeId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["request-types", "{{requestTypeId}}"] }
+          }
+        },
+        {
+          "name": "Delete request type",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/request-types/{{requestTypeId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["request-types", "{{requestTypeId}}"] }
+          }
+        },
+        {
+          "name": "SLA preview",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/request-types/{{requestTypeId}}/sla-preview?priority=high",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["request-types", "{{requestTypeId}}", "sla-preview"],
+              "query": [{ "key": "priority", "value": "high" }]
+            }
+          }
+        },
+        {
+          "name": "Primary assignee preview",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/request-types/{{requestTypeId}}/primary-assignee-preview", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["request-types", "{{requestTypeId}}", "primary-assignee-preview"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workflows",
+      "item": [
+        {
+          "name": "Create workflow",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["if (pm.response.code === 201) { try { pm.collectionVariables.set('workflowId', pm.response.json().id); } catch(e){} }"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": \"{{categoryId}}\",\n  \"request_type_id\": \"{{requestTypeId}}\",\n  \"approval_required\": true,\n  \"approval_levels\": [\n    {\n      \"level_index\": 1,\n      \"logic\": \"or\",\n      \"approvers\": [\n        { \"approver_type\": \"specific_user\", \"approver_user_id\": \"{{approverUserId}}\", \"sort_order\": 1 }\n      ]\n    }\n  ],\n  \"escalation_config\": {\n    \"auto_escalate_enabled\": true,\n    \"escalate_after_minutes\": 60,\n    \"escalate_to_user_id\": \"{{escalateToUserId}}\",\n    \"pre_notify_enabled\": true,\n    \"pre_notify_minutes_before\": 15,\n    \"notification_methods\": [\"email\", \"system\"],\n    \"notify_on\": [\"breach\"]\n  }\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/workflows", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["workflows"] }
+          }
+        },
+        {
+          "name": "List workflows",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/workflows?page=1&page_size=25&status=all",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["workflows"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "page_size", "value": "25" },
+                { "key": "q", "value": "", "disabled": true },
+                { "key": "category_id", "value": "{{categoryId}}", "disabled": true },
+                { "key": "request_type_id", "value": "{{requestTypeId}}", "disabled": true },
+                { "key": "primary_assignee_user_id", "value": "{{userId}}", "disabled": true },
+                { "key": "approver_user_id", "value": "{{approverUserId}}", "disabled": true },
+                { "key": "status", "value": "all" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get workflow by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/workflows/{{workflowId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["workflows", "{{workflowId}}"] }
+          }
+        },
+        {
+          "name": "Update workflow",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": \"{{categoryId}}\",\n  \"request_type_id\": \"{{requestTypeId}}\",\n  \"approval_required\": true,\n  \"approval_levels\": [\n    {\n      \"level_index\": 1,\n      \"logic\": \"and\",\n      \"approvers\": [\n        { \"approver_type\": \"specific_user\", \"approver_user_id\": \"{{approverUserId}}\", \"sort_order\": 1 }\n      ]\n    }\n  ],\n  \"escalation_config\": {\n    \"auto_escalate_enabled\": false,\n    \"escalate_after_minutes\": null,\n    \"escalate_to_user_id\": null,\n    \"pre_notify_enabled\": false,\n    \"pre_notify_minutes_before\": null,\n    \"notification_methods\": [],\n    \"notify_on\": []\n  }\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/workflows/{{workflowId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["workflows", "{{workflowId}}"] }
+          }
+        },
+        {
+          "name": "Delete workflow",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/workflows/{{workflowId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["workflows", "{{workflowId}}"] }
+          }
+        },
+        {
+          "name": "Activate workflow",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/workflows/{{workflowId}}/activate", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["workflows", "{{workflowId}}", "activate"] }
+          }
+        },
+        {
+          "name": "Deactivate workflow",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/workflows/{{workflowId}}/deactivate", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["workflows", "{{workflowId}}", "deactivate"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Dashboard summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/dashboard/summary", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["dashboard", "summary"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Requests",
+      "item": [
+        {
+          "name": "Raise request (multipart)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["if (pm.response.code === 201) { try { pm.collectionVariables.set('requestId', pm.response.json().id); } catch(e){} }"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "body", "value": "{\"category_id\":\"{{categoryId}}\",\"request_type_id\":\"{{requestTypeId}}\",\"title\":\"My laptop won't boot\",\"description\":\"Black screen on power. Tried hard reset.\",\"priority\":\"high\"}", "type": "text" },
+                { "key": "files", "type": "file", "src": [], "disabled": true }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests"] }
+          }
+        },
+        {
+          "name": "Raise request (JSON)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["if (pm.response.code === 201) { try { pm.collectionVariables.set('requestId', pm.response.json().id); } catch(e){} }"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" },
+              { "key": "Idempotency-Key", "value": "{{$guid}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category_id\": \"{{categoryId}}\",\n  \"request_type_id\": \"{{requestTypeId}}\",\n  \"title\": \"My laptop won't boot\",\n  \"description\": \"Black screen on power. Tried hard reset.\",\n  \"priority\": \"high\",\n  \"attachment_ids\": []\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/json", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "json"] }
+          }
+        },
+        {
+          "name": "List requests",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/requests?page=1&page_size=25",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["requests"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "page_size", "value": "25" },
+                { "key": "q", "value": "", "disabled": true },
+                { "key": "category_id", "value": "{{categoryId}}", "disabled": true },
+                { "key": "status", "value": "open", "disabled": true },
+                { "key": "priority", "value": "high", "disabled": true },
+                { "key": "requester_user_id", "value": "{{userId}}", "disabled": true },
+                { "key": "created_from", "value": "2026-01-01T00:00:00Z", "disabled": true },
+                { "key": "created_to", "value": "2026-12-31T23:59:59Z", "disabled": true },
+                { "key": "status_group", "value": "open", "disabled": true },
+                { "key": "resolved_on", "value": "this_week", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export requests (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/requests/export?format=csv&date_range=current_month",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["requests", "export"],
+              "query": [
+                { "key": "format", "value": "csv" },
+                { "key": "date_range", "value": "current_month" },
+                { "key": "start_date", "value": "2026-04-01", "disabled": true },
+                { "key": "end_date", "value": "2026-04-30", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get request by id",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}"] }
+          }
+        },
+        {
+          "name": "Get attachment signed URL",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/attachments/{{attachmentId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "attachments", "{{attachmentId}}"] }
+          }
+        },
+        {
+          "name": "Approve request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"remarks\": \"Looks good, approved.\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/approve", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "approve"] }
+          }
+        },
+        {
+          "name": "Reject request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"reason\": \"Insufficient justification.\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/reject", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "reject"] }
+          }
+        },
+        {
+          "name": "Mark first response",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/first-response", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "first-response"] }
+          }
+        },
+        {
+          "name": "Resolve request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"resolution_notes\": \"Replaced battery; laptop boots.\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/resolve", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "resolve"] }
+          }
+        },
+        {
+          "name": "Close request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/close", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "close"] }
+          }
+        },
+        {
+          "name": "List comments",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/comments", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "comments"] }
+          }
+        },
+        {
+          "name": "Add comment",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "exec": ["if (pm.response.code === 201) { try { pm.collectionVariables.set('commentId', pm.response.json().id); } catch(e){} }"], "type": "text/javascript" }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"body\": \"Any update on this?\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/comments", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "comments"] }
+          }
+        },
+        {
+          "name": "Eligible executors",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/eligible-executors", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "eligible-executors"] }
+          }
+        },
+        {
+          "name": "Eligible escalation targets",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/eligible-escalation-targets", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "eligible-escalation-targets"] }
+          }
+        },
+        {
+          "name": "Assign executor",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"executor_user_id\": \"{{executorUserId}}\",\n  \"notes\": \"Please pick this up.\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/assign-executor", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "assign-executor"] }
+          }
+        },
+        {
+          "name": "Reassign executor",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"executor_user_id\": \"{{executorUserId}}\",\n  \"notes\": \"Reassigning due to unavailability.\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/reassign-executor", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "reassign-executor"] }
+          }
+        },
+        {
+          "name": "Escalate request",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"escalate_to_user_id\": \"{{escalateToUserId}}\",\n  \"reason\": \"No response within SLA window.\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/escalate", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "escalate"] }
+          }
+        },
+        {
+          "name": "List internal notes",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/internal-notes", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "internal-notes"] }
+          }
+        },
+        {
+          "name": "Add internal note",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"body\": \"Staff-only note: pending parts.\"\n}" },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/internal-notes", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "internal-notes"] }
+          }
+        },
+        {
+          "name": "Activity log",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "X-SRM-Dev-Session", "value": "{{devSession}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/requests/{{requestId}}/activity", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["requests", "{{requestId}}", "activity"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Internal Jobs",
+      "description": "Schedule-service-only endpoints. Authenticated via X-Internal-Token (matches INTERNAL_TOKEN env var). Do NOT call from client apps.",
+      "item": [
+        {
+          "name": "SLA tick",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "X-Internal-Token", "value": "{{internalToken}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/_internal/jobs/sla-tick", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["_internal", "jobs", "sla-tick"] }
+          }
+        },
+        {
+          "name": "Rebuild SLA cursor",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "X-Internal-Token", "value": "{{internalToken}}" }],
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/_internal/jobs/rebuild-sla-cursor", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["_internal", "jobs", "rebuild-sla-cursor"] }
+          }
+        }
+      ]
+    }
+  ]
+}

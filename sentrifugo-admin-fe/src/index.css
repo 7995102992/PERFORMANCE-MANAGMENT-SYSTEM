@@ -1,0 +1,357 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Fonts — body stays Geist, heading promoted to Poppins, mono = JetBrains Mono */
+@import "@fontsource-variable/geist";
+@import "@fontsource/poppins/400.css";
+@import "@fontsource/poppins/500.css";
+@import "@fontsource/poppins/600.css";
+@import "@fontsource/poppins/700.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    /* ── Typography ──────────────────────────────────────────────────────── */
+    --font-heading: 'Poppins', system-ui, sans-serif;
+    --font-sans: 'Geist Variable', sans-serif;
+    --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+
+    /* ── Shadcn semantic color aliases ───────────────────────────────────── */
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --color-card: var(--card);
+    --color-card-foreground: var(--card-foreground);
+    --color-popover: var(--popover);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-primary: var(--primary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-secondary: var(--secondary);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-muted: var(--muted);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-accent: var(--accent);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-destructive: var(--destructive);
+    --color-border: var(--border);
+    --color-input: var(--input);
+    --color-ring: var(--ring);
+
+    /* ── Chart tokens ────────────────────────────────────────────────────── */
+    --color-chart-1: var(--chart-1);
+    --color-chart-2: var(--chart-2);
+    --color-chart-3: var(--chart-3);
+    --color-chart-4: var(--chart-4);
+    --color-chart-5: var(--chart-5);
+
+    /* ── Sidebar tokens ──────────────────────────────────────────────────── */
+    --color-sidebar: var(--sidebar);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-ring: var(--sidebar-ring);
+
+    /* ── Semantic status tokens ──────────────────────────────────────────── */
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+    --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
+
+    /* ── Sentrifugo surface tokens ───────────────────────────────────────── */
+    --color-caption: var(--caption);
+    --color-table-header: var(--table-header);
+    --color-table-border: var(--table-border);
+
+    /* ── Badge tokens ────────────────────────────────────────────────────── */
+    --color-badge-active-text: var(--badge-active-text);
+    --color-badge-inactive-text: var(--badge-inactive-text);
+    --color-badge-pending-text: var(--badge-pending-text);
+    --color-badge-draft-text: var(--badge-draft-text);
+    --color-badge-reject-text: var(--badge-reject-text);
+    --color-badge-inprogress-text: var(--badge-inprogress-text);
+    --color-badge-open-text: var(--badge-open-text);
+    --color-badge-probation-text: var(--badge-probation-text);
+    --color-badge-notice-period-text: var(--badge-notice-period-text);
+    --color-badge-terminated-text: var(--badge-terminated-text);
+    --color-badge-on-bench-text: var(--badge-on-bench-text);
+
+    /* ── Module signature colors ─────────────────────────────────────────── */
+    --color-module-core: var(--module-core);
+    --color-module-payroll: var(--module-payroll);
+    --color-module-talent: var(--module-talent);
+    --color-module-analytics: var(--module-analytics);
+
+    /* ── Label token ────────────────────────────────────────────────────── */
+    --color-label: var(--label-color);
+
+    /* ── Icon box tokens ─────────────────────────────────────────────────── */
+    --color-icon: var(--icon);
+    --color-icon-bg: var(--icon-bg);
+    --color-icon-bg-selected: var(--icon-bg-selected);
+
+    /* ── Radius scale (base = 6px per DS) ───────────────────────────────── */
+    --radius-sm: calc(var(--radius) * 0.67);
+    --radius-md: calc(var(--radius) * 1.33);
+    --radius-lg: calc(var(--radius) * 2);
+    --radius-xl: calc(var(--radius) * 2.67);
+    --radius-2xl: calc(var(--radius) * 4);
+    --radius-3xl: calc(var(--radius) * 5.33);
+    --radius-4xl: calc(var(--radius) * 6.67);
+}
+
+/* ── Design system root tokens ───────────────────────────────────────────── */
+:root {
+    /* Core surfaces */
+    --background: oklch(0.97 0 0);
+    --foreground: oklch(0.32 0.04 285);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.32 0.04 285);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.32 0.04 285);
+
+    /* Brand — primary stays #6F5CFF per product decision */
+    --primary: #6F5CFF;
+    --primary-foreground: oklch(0.99 0 0);
+
+    /* Secondary / muted surfaces */
+    --secondary: oklch(0.96 0.012 285);
+    --secondary-foreground: oklch(0.30 0.03 285);
+    --muted: oklch(0.96 0.008 285);
+    --muted-foreground: #9A9EAC;
+    --accent: oklch(0.94 0.025 285);
+    --accent-foreground: oklch(0.30 0.03 285);
+
+    /* Semantic states */
+    --destructive: #EF4444;
+    --success: #22C55E;
+    --success-foreground: #ffffff;
+    --warning: #f59e0b;
+    --warning-foreground: #ffffff;
+    --info: #007CF0;
+    --info-foreground: #ffffff;
+
+    /* Form chrome */
+    --border: #F0EFF6;
+    --input: #F0EFF6;
+    --ring: #6F5CFF;
+
+    /* Charts */
+    --chart-1: #6F5CFF;
+    --chart-2: oklch(0.6 0.2 150);
+    --chart-3: oklch(0.65 0.18 50);
+    --chart-4: oklch(0.55 0.22 330);
+    --chart-5: oklch(0.7 0.15 200);
+
+    /* Radius base = 6px (DS spec) */
+    --radius: 0.375rem;
+
+    /* Sidebar — always dark navy regardless of app theme */
+    --sidebar: #1B2039;
+    --sidebar-foreground: #E2E8F0;
+    --sidebar-primary: #6F5CFF;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #242D4A;
+    --sidebar-accent-foreground: #E2E8F0;
+    --sidebar-border: rgba(255, 255, 255, 0.08);
+    --sidebar-ring: #6F5CFF;
+
+    /* ── Label color ────────────────────────────────────────────────────── */
+    --label-color: #11023B;
+
+    /* ── Sentrifugo surface tokens ──────────────────────────────────────── */
+    --caption: #C2C6D1;
+    --table-header: #F7FAFF;
+    --table-border: #E8EEFF;
+
+    /* ── Badge tokens ───────────────────────────────────────────────────── */
+    --badge-active-text: #16A34A;
+    --badge-inactive-text: #DC2626;
+    --badge-pending-text: #007CF0;
+    --badge-draft-text: #64748B;
+    --badge-reject-text: #DC2626;
+    --badge-inprogress-text: #007CF0;
+    --badge-open-text: #007CF0;
+    --badge-probation-text: #D97706;
+    --badge-notice-period-text: #EA580C;
+    --badge-terminated-text: #DC2626;
+    --badge-on-bench-text: #7C3AED;
+
+    /* ── Icon box tokens ────────────────────────────────────────────────── */
+    --icon: #007CF0;
+    --icon-bg: rgba(0, 124, 240, 0.08);
+    --icon-bg-selected: rgba(0, 124, 240, 0.18);
+
+    /* ── Module signature colors ────────────────────────────────────────── */
+    --module-core: #6F5CFF;
+    --module-payroll: #2bb3a3;
+    --module-talent: #f59e0b;
+    --module-analytics: #6c5ce7;
+
+    /* ── Shadow scale (DS spec) ─────────────────────────────────────────── */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+    /* ── Button semantic tokens ─────────────────────────────────────────── */
+    --btn-neutral: oklch(0.22 0.018 285);
+    --btn-neutral-fg: oklch(0.99 0 0);
+    --btn-success: #60CD79;
+    --btn-success-fg: #ffffff;
+    --btn-soft: #EAE6FF;
+    --btn-soft-fg: #11023B;
+    --btn-cancel-border: #EAE6FF;
+
+    /* ── Motion tokens (DS spec) ────────────────────────────────────────── */
+    --motion-ease-standard: cubic-bezier(0.28, 0.11, 0.32, 1);
+    --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+    --motion-duration-fast: 180ms;
+    --motion-duration-medium: 280ms;
+    --motion-duration-slow: 420ms;
+    --motion-distance-sm: 8px;
+    --motion-distance-md: 14px;
+}
+
+.dark {
+    --label-color: rgba(255, 255, 255, 0.85);
+    --background: oklch(0.15 0.015 285);
+    --foreground: oklch(0.95 0.01 285);
+    --card: oklch(0.20 0.02 285);
+    --card-foreground: oklch(0.95 0.01 285);
+    --popover: oklch(0.20 0.02 285);
+    --popover-foreground: oklch(0.95 0.01 285);
+    --primary: #6F5CFF;
+    --primary-foreground: oklch(0.99 0 0);
+    --secondary: oklch(0.25 0.02 285);
+    --secondary-foreground: oklch(0.95 0.01 285);
+    --muted: oklch(0.25 0.02 285);
+    --muted-foreground: oklch(0.65 0.02 285);
+    --accent: oklch(0.28 0.03 285);
+    --accent-foreground: oklch(0.95 0.01 285);
+    --destructive: oklch(0.704 0.191 22.216);
+    --success: #22C55E;
+    --success-foreground: #ffffff;
+    --warning: #f59e0b;
+    --warning-foreground: #ffffff;
+    --info: #007CF0;
+    --info-foreground: #ffffff;
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 15%);
+    --ring: #6F5CFF;
+    --chart-1: #6F5CFF;
+    --chart-2: oklch(0.6 0.2 150);
+    --chart-3: oklch(0.65 0.18 50);
+    --chart-4: oklch(0.55 0.22 330);
+    --chart-5: oklch(0.7 0.15 200);
+    --sidebar: #11182E;
+    --sidebar-foreground: #CBD5E1;
+    --sidebar-primary: #6F5CFF;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #1A2240;
+    --sidebar-accent-foreground: #CBD5E1;
+    --sidebar-border: rgba(255, 255, 255, 0.06);
+    --sidebar-ring: #6F5CFF;
+
+    /* ── Button semantic tokens (dark) ─────────────────────────────────── */
+    --btn-neutral: oklch(0.86 0.008 285);
+    --btn-neutral-fg: oklch(0.12 0.018 285);
+    --btn-success: #4db866;
+    --btn-success-fg: #ffffff;
+    --btn-soft: rgba(111, 92, 255, 0.2);
+    --btn-soft-fg: #b3aaff;
+    --btn-cancel-border: rgba(234, 230, 255, 0.25);
+
+    /* ── Surface tokens (dark) ──────────────────────────────────────────── */
+    --caption: oklch(0.52 0.02 285);
+    --table-header: oklch(0.22 0.02 285);
+    --table-border: oklch(1 0 0 / 8%);
+
+    /* ── Badge tokens (dark) ────────────────────────────────────────────── */
+    --badge-active-text: #4ade80;
+    --badge-inactive-text: #f87171;
+    --badge-pending-text: #60ADFF;
+    --badge-draft-text: #94a3b8;
+    --badge-reject-text: #f87171;
+    --badge-inprogress-text: #60ADFF;
+    --badge-open-text: #60ADFF;
+    --badge-probation-text: #FCD34D;
+    --badge-notice-period-text: #FB923C;
+    --badge-terminated-text: #f87171;
+    --badge-on-bench-text: #A78BFA;
+
+    /* ── Icon box tokens (dark) ─────────────────────────────────────────── */
+    --icon: #007CF0;
+    --icon-bg: rgba(0, 124, 240, 0.12);
+    --icon-bg-selected: oklch(0.28 0.02 285);
+
+    /* ── Module colors stay the same in dark ────────────────────────────── */
+    --module-core: #6F5CFF;
+    --module-payroll: #2bb3a3;
+    --module-talent: #f59e0b;
+    --module-analytics: #6c5ce7;
+
+    /* ── Shadows lift slightly in dark mode ─────────────────────────────── */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.18);
+    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.24), 0 1px 2px -1px rgb(0 0 0 / 0.18);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.28), 0 2px 4px -2px rgb(0 0 0 / 0.2);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.32), 0 4px 6px -4px rgb(0 0 0 / 0.22);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.36), 0 8px 10px -6px rgb(0 0 0 / 0.24);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+  }
+  html {
+    font-family: var(--font-sans);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  /* Slim scrollbar — 4px for design consistency */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--foreground) 25%, transparent) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--foreground) 25%, transparent);
+    border-radius: 9999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in oklch, var(--foreground) 45%, transparent);
+  }
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Respect reduced-motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

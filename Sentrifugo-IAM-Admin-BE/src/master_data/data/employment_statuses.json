@@ -1,0 +1,11 @@
+[
+  { "key": "notice-period", "value": "Notice Period", "isActive": true },
+  { "key": "probation", "value": "Probation", "isActive": true },
+  { "key": "permanent", "value": "Permanent", "isActive": true },
+  { "key": "direct-contract", "value": "Direct Contract", "isActive": true },
+  { "key": "third-party-contract", "value": "Third Party Contract", "isActive": true },
+  { "key": "absconded", "value": "Absconded", "isActive": false },
+  { "key": "exit", "value": "Exit", "isActive": false },
+  { "key": "retired", "value": "Retired", "isActive": false },
+  { "key": "terminated", "value": "Terminated", "isActive": false }
+]

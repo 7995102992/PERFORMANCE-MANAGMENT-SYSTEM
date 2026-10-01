@@ -1,0 +1,18 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+beanie==1.29.0
+pymongo==4.9.2
+motor==3.6.0
+redis[hiredis]==5.2.1
+aio-pika==9.5.4
+httpx==0.28.1
+pydantic==2.10.4
+pydantic-settings==2.7.1
+python-multipart==0.0.20
+pyjwt==2.10.1
+python-dateutil==2.9.0.post0
+tzdata==2024.2
+openpyxl==3.1.5
+boto3==1.35.81
+
+hvac==2.3.0  # OpenBao client for pull/seed/run_with_bao scripts

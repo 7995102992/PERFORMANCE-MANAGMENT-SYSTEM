@@ -1,0 +1,9 @@
+[
+  { "key": "direct-hire", "value": "Direct Hire" },
+  { "key": "third-party-payroll", "value": "Third-Party Payroll" },
+  { "key": "contract-vendor", "value": "Contract Vendor" },
+  { "key": "staffing-agency", "value": "Staffing Agency" },
+  { "key": "freelance-platform", "value": "Freelance Platform" },
+  { "key": "internal-movement", "value": "Internal Movement" },
+  { "key": "global-mobility", "value": "Global Mobility (Onsite)" }
+]

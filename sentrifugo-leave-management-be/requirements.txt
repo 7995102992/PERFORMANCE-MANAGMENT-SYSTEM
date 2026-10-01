@@ -1,0 +1,25 @@
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+motor
+structlog
+pytest
+pytest-asyncio
+httpx
+ruff
+redis
+aio-pika
+pyjwt
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+python-multipart
+openpyxl
+langchain-anthropic
+langchain-google-genai
+langgraph
+boto3
+hvac==2.3.0  # OpenBao client for pull/seed/run_with_bao scripts
+sqlalchemy[asyncio]
+aioodbc  # biometric source DB (attendance puller) — async MS SQL Server via ODBC
+pyodbc   # ODBC backend aioodbc wraps (needs the OS "ODBC Driver 18 for SQL Server")

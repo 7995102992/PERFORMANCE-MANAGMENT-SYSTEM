@@ -1,0 +1,13 @@
+[
+  { "key": "linkedin", "value": "LinkedIn" },
+  { "key": "naukri", "value": "Naukri" },
+  { "key": "indeed", "value": "Indeed" },
+  { "key": "careers-page", "value": "Company Careers Page" },
+  { "key": "employee-referral", "value": "Employee Referral" },
+  { "key": "recruitment-agency", "value": "Recruitment Agency" },
+  { "key": "campus-hiring", "value": "Campus Hiring" },
+  { "key": "hackathons", "value": "Hackathons" },
+  { "key": "github-opensource", "value": "GitHub / Open Source" },
+  { "key": "walk-in", "value": "Walk-in Drive" },
+  { "key": "internal-transfer", "value": "Internal Transfer" }
+]

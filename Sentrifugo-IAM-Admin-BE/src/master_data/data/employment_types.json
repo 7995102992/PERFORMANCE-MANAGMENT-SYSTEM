@@ -1,0 +1,5 @@
+[
+  { "key": "full-time", "value": "Full-Time" },
+  { "key": "contract", "value": "Contract" },
+  { "key": "internship", "value": "Internship" }
+]

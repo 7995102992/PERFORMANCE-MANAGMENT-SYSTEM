@@ -1,0 +1,18 @@
+[
+  { "key": "product-based", "value": "Product-Based Company" },
+  { "key": "service-based", "value": "Service-Based Company" },
+  { "key": "hybrid", "value": "Hybrid (Product + Service)" },
+  { "key": "b2b", "value": "B2B (Business to Business)" },
+  { "key": "b2c", "value": "B2C (Business to Consumer)" },
+  { "key": "b2g", "value": "B2G (Business to Government)" },
+  { "key": "d2c", "value": "D2C (Direct to Consumer)" },
+  { "key": "marketplace", "value": "Marketplace / Platform" },
+  { "key": "consulting-firm", "value": "Consulting Firm" },
+  { "key": "system-integrator", "value": "System Integrator" },
+  { "key": "outsourcing-bpo-kpo", "value": "Outsourcing / BPO / KPO" },
+  { "key": "managed-services", "value": "Managed Services Provider" },
+  { "key": "private-company", "value": "Private Company" },
+  { "key": "public-listed", "value": "Public Listed Company" },
+  { "key": "government-org", "value": "Government Organization" },
+  { "key": "non-profit-org", "value": "Non-Profit Organization" }
+]

@@ -1,0 +1,13 @@
+[
+  { "key": "critical-resource", "value": "Critical Resource" },
+  { "key": "billable", "value": "Billable" },
+  { "key": "non-billable", "value": "Non-Billable" },
+  { "key": "core-team", "value": "Core Team" },
+  { "key": "support-team", "value": "Support Team" },
+  { "key": "leadership", "value": "Leadership" },
+  { "key": "senior-level", "value": "Senior Level" },
+  { "key": "mid-level", "value": "Mid Level" },
+  { "key": "junior-level", "value": "Junior Level" },
+  { "key": "intern", "value": "Intern" },
+  { "key": "contractor", "value": "Contractor" }
+]

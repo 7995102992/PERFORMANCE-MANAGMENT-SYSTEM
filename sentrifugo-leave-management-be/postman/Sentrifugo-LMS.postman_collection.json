@@ -1,0 +1,704 @@
+{
+	"info": {
+		"name": "Sentrifugo LMS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{"key": "base_url", "value": "http://localhost:8004"},
+		{"key": "token", "value": ""},
+		{"key": "org_id", "value": ""},
+		{"key": "holiday_plan_id", "value": ""},
+		{"key": "holiday_id", "value": ""},
+		{"key": "calendar_id", "value": ""},
+		{"key": "shift_id", "value": ""},
+		{"key": "leave_type_id", "value": ""},
+		{"key": "leave_plan_id", "value": ""},
+		{"key": "grant_policy_id", "value": ""},
+		{"key": "assignment_id", "value": ""},
+		{"key": "entitlement_policy_id", "value": ""},
+		{"key": "entitlement_id", "value": ""},
+		{"key": "leave_request_id", "value": ""},
+		{"key": "approval_flow_id", "value": ""},
+		{"key": "employee_id", "value": ""}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [{"key": "token", "value": "{{token}}", "type": "string"}]
+	},
+	"item": [
+		{
+			"name": "Holiday Plans",
+			"item": [
+				{
+					"name": "Create Holiday Plan",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/holiday-plans",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"org_id\": \"{{org_id}}\",\n  \"name\": \"India Holidays 2025\",\n  \"country\": \"IN\",\n  \"year\": 2025,\n  \"business_unit_ids\": [],\n  \"department_ids\": []\n}"
+						}
+					},
+					"event": [{"listen": "test", "script": {"exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('holiday_plan_id', pm.response.json().id); }"]}}]
+				},
+				{
+					"name": "List Holiday Plans",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/holiday-plans?org_id={{org_id}}",
+							"query": [{"key": "org_id", "value": "{{org_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Get Holiday Plan",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/holiday-plans/{{holiday_plan_id}}"
+					}
+				},
+				{
+					"name": "Update Holiday Plan",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/holiday-plans/{{holiday_plan_id}}",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"India Holidays 2025 Updated\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Delete Holiday Plan",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/holiday-plans/{{holiday_plan_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Holidays",
+			"item": [
+				{
+					"name": "Create Holiday",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/holidays",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"plan_id\": \"{{holiday_plan_id}}\",\n  \"org_id\": \"{{org_id}}\",\n  \"name\": \"Independence Day\",\n  \"date\": \"2025-08-15\",\n  \"classification\": \"national\",\n  \"business_unit_id\": \"{{org_id}}\"\n}"
+						}
+					},
+					"event": [{"listen": "test", "script": {"exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('holiday_id', pm.response.json().id); }"]}}]
+				},
+				{
+					"name": "List Holidays by Plan",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/holiday-plans/{{holiday_plan_id}}/holidays?page=1&page_size=20",
+							"query": [
+								{"key": "page", "value": "1"},
+								{"key": "page_size", "value": "20"}
+							]
+						}
+					}
+				},
+				{
+					"name": "List Holidays Calendar",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/holidays/calendar?org_id={{org_id}}&plan_id={{holiday_plan_id}}&from_date=2025-08-01&to_date=2025-08-31",
+							"query": [
+								{"key": "org_id", "value": "{{org_id}}"},
+								{"key": "plan_id", "value": "{{holiday_plan_id}}"},
+								{"key": "from_date", "value": "2025-08-01"},
+								{"key": "to_date", "value": "2025-08-31"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Holiday",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/holidays/{{holiday_id}}",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Independence Day (Updated)\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Delete Holiday",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/holidays/{{holiday_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Work Calendars",
+			"item": [
+				{
+					"name": "List Work Calendars",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/work-calendars"
+					}
+				},
+				{
+					"name": "Create Work Calendar",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/work-calendars",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Standard 2025\",\n  \"year_type\": \"CUSTOM\",\n  \"start_date\": \"2025-01-01\",\n  \"end_date\": \"2025-12-31\",\n  \"is_active\": true,\n  \"is_default\": false,\n  \"week_config\": {\n    \"week_start_day\": \"MONDAY\",\n    \"work_week_start\": \"MONDAY\",\n    \"work_week_end\": \"FRIDAY\",\n    \"allow_half_day\": true\n  },\n  \"weekend_matrix\": {},\n  \"statutory_config\": {\n    \"enabled\": true,\n    \"rule_type\": \"FIXED\",\n    \"statutory_days\": []\n  }\n}"
+						}
+					},
+					"event": [{"listen": "test", "script": {"exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('calendar_id', pm.response.json().id); }"]}}]
+				},
+				{
+					"name": "Get Work Calendar",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/work-calendars/{{calendar_id}}"
+					}
+				},
+				{
+					"name": "Update Work Calendar",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/work-calendars/{{calendar_id}}",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Standard 2025 Updated\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Assign Calendar to Scope",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/work-calendars/assign",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"calendar_id\": \"{{calendar_id}}\",\n  \"scope\": \"DEPARTMENT\",\n  \"scope_ids\": [\"dept_id_1\"]\n}"
+						}
+					}
+				},
+				{
+					"name": "Assign Calendar to Employees",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/work-calendars/assign/employee",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"calendar_id\": \"{{calendar_id}}\",\n  \"employee_ids\": [\"{{employee_id}}\"],\n  \"effective_from\": \"2025-01-01\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Create Shift",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/work-calendars/shifts",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"calendar_id\": \"{{calendar_id}}\",\n  \"name\": \"Morning Shift\",\n  \"start_time\": \"09:00\",\n  \"end_time\": \"18:00\",\n  \"break_minutes\": 60\n}"
+						}
+					},
+					"event": [{"listen": "test", "script": {"exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('shift_id', pm.response.json().id); }"]}}]
+				},
+				{
+					"name": "List Shifts by Calendar",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/work-calendars/{{calendar_id}}/shifts"
+					}
+				},
+				{
+					"name": "Get Shift",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/work-calendars/shifts/{{shift_id}}"
+					}
+				},
+				{
+					"name": "Update Shift",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/work-calendars/shifts/{{shift_id}}",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Morning Shift Updated\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Delete Shift",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/work-calendars/shifts/{{shift_id}}"
+					}
+				},
+				{
+					"name": "Check Working Day",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/working-day?employee_id={{employee_id}}&date=2025-06-02",
+							"query": [
+								{"key": "employee_id", "value": "{{employee_id}}"},
+								{"key": "date", "value": "2025-06-02"}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Leave Types",
+			"item": [
+				{
+					"name": "Create Leave Type",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/leave-types",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"org_id\": \"{{org_id}}\",\n  \"name\": \"Annual Leave\",\n  \"code\": \"AL\",\n  \"unit\": \"DAYS\",\n  \"is_paid\": true\n}"
+						}
+					},
+					"event": [{"listen": "test", "script": {"exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('leave_type_id', pm.response.json().id); }"]}}]
+				},
+				{
+					"name": "List Leave Types",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/leave-types?org_id={{org_id}}",
+							"query": [{"key": "org_id", "value": "{{org_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Get Leave Type",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/leave-types/{{leave_type_id}}"
+					}
+				},
+				{
+					"name": "Update Leave Type",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/leave-types/{{leave_type_id}}",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Annual Leave Updated\",\n  \"color\": \"#4CAF50\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Delete Leave Type",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/leave-types/{{leave_type_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Leave Plans",
+			"item": [
+				{
+					"name": "Create Leave Plan",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/leave-plans",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"org_id\": \"{{org_id}}\",\n  \"name\": \"Standard Leave Plan\",\n  \"calendar_start_month\": 1\n}"
+						}
+					},
+					"event": [{"listen": "test", "script": {"exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('leave_plan_id', pm.response.json().id); }"]}}]
+				},
+				{
+					"name": "List Leave Plans",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/leave-plans?org_id={{org_id}}",
+							"query": [{"key": "org_id", "value": "{{org_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Get Leave Plan",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/leave-plans/{{leave_plan_id}}"
+					}
+				},
+				{
+					"name": "Update Leave Plan",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/leave-plans/{{leave_plan_id}}",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Standard Leave Plan Updated\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Delete Leave Plan",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/leave-plans/{{leave_plan_id}}"
+					}
+				},
+				{
+					"name": "Upsert Grant Policy",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/leave-plans/{{leave_plan_id}}/grant-policy",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"allocation\": {\n    \"amount\": 21,\n    \"unit\": \"DAYS\",\n    \"frequency\": \"YEARLY\"\n  }\n}"
+						}
+					},
+					"event": [{"listen": "test", "script": {"exec": ["if (pm.response.code === 200) { pm.collectionVariables.set('grant_policy_id', pm.response.json().id); }"]}}]
+				},
+				{
+					"name": "Get Grant Policy",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/leave-plans/{{leave_plan_id}}/grant-policy"
+					}
+				},
+				{
+					"name": "Update Grant Policy",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/leave-plans/{{leave_plan_id}}/grant-policy/{{grant_policy_id}}",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"allocation\": {\n    \"amount\": 24,\n    \"unit\": \"DAYS\",\n    \"frequency\": \"YEARLY\"\n  }\n}"
+						}
+					}
+				},
+				{
+					"name": "Add Leave Type to Plan",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/leave-plans/{{leave_plan_id}}/leave-types",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"leave_type_id\": \"{{leave_type_id}}\"\n}"
+						}
+					}
+				},
+				{
+					"name": "List Leave Types for Plan",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/leave-plans/{{leave_plan_id}}/leave-types"
+					}
+				},
+				{
+					"name": "Remove Leave Type from Plan",
+					"request": {
+						"method": "DELETE",
+						"url": "{{base_url}}/leave-plans/{{leave_plan_id}}/leave-types/{{leave_type_id}}"
+					}
+				},
+				{
+					"name": "List Plan Assignments",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/leave-plans/{{leave_plan_id}}/assignments"
+					}
+				}
+			]
+		},
+		{
+			"name": "Leave Plan Assignments",
+			"item": [
+				{
+					"name": "Create Assignment",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/leave-plan-assignments",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"leave_plan_id\": \"{{leave_plan_id}}\",\n  \"scope_type\": \"ORG\",\n  \"priority\": 1\n}"
+						}
+					},
+					"event": [{"listen": "test", "script": {"exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('assignment_id', pm.response.json().id); }"]}}]
+				},
+				{
+					"name": "Resolve Employee Leave Plan",
+					"request": {
+						"method": "POST",
+						"url": {
+							"raw": "{{base_url}}/employee-leave-plans/resolve?employee_id={{employee_id}}&org_id={{org_id}}",
+							"query": [
+								{"key": "employee_id", "value": "{{employee_id}}"},
+								{"key": "org_id", "value": "{{org_id}}"}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Employee Leave Plan",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/employee-leave-plans/{{employee_id}}"
+					}
+				}
+			]
+		},
+		{
+			"name": "Entitlement Policies",
+			"item": [
+				{
+					"name": "Create Entitlement Policy",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/entitlement-policies",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"leave_plan_id\": \"{{leave_plan_id}}\",\n  \"leave_type_id\": \"{{leave_type_id}}\",\n  \"credit_strategy\": \"UPFRONT\",\n  \"accrual_frequency\": \"NONE\",\n  \"total_days\": 21,\n  \"joining_policy\": \"FULL\",\n  \"allow_future_request\": false,\n  \"allow_negative_balance\": false,\n  \"rounding_strategy\": \"EXACT\",\n  \"min_leave_per_request\": 0.5,\n  \"allow_clubbing\": false,\n  \"allow_during_notice\": true\n}"
+						}
+					},
+					"event": [{"listen": "test", "script": {"exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('entitlement_policy_id', pm.response.json().id); }"]}}]
+				},
+				{
+					"name": "List Entitlement Policies",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/entitlement-policies?leave_plan_id={{leave_plan_id}}",
+							"query": [{"key": "leave_plan_id", "value": "{{leave_plan_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Get Entitlement Policy",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/entitlement-policies/{{entitlement_policy_id}}"
+					}
+				},
+				{
+					"name": "Update Entitlement Policy",
+					"request": {
+						"method": "PUT",
+						"url": "{{base_url}}/entitlement-policies/{{entitlement_policy_id}}",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"total_days\": 25\n}"
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Entitlements",
+			"item": [
+				{
+					"name": "Create Entitlement",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/entitlements",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employee_id\": \"{{employee_id}}\",\n  \"leave_type_id\": \"{{leave_type_id}}\",\n  \"policy_id\": \"{{entitlement_policy_id}}\"\n}"
+						}
+					},
+					"event": [{"listen": "test", "script": {"exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('entitlement_id', pm.response.json().id); }"]}}]
+				},
+				{
+					"name": "List Entitlements",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/entitlements?employee_id={{employee_id}}",
+							"query": [{"key": "employee_id", "value": "{{employee_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Add Ledger Entry",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/entitlements/ledger",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employee_id\": \"{{employee_id}}\",\n  \"leave_type_id\": \"{{leave_type_id}}\",\n  \"transaction_type\": \"CREDIT\",\n  \"amount\": 21,\n  \"note\": \"Annual credit\"\n}"
+						}
+					}
+				},
+				{
+					"name": "List Ledger Entries",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/entitlements/ledger?employee_id={{employee_id}}",
+							"query": [
+								{"key": "employee_id", "value": "{{employee_id}}"},
+								{"key": "leave_type_id", "value": "{{leave_type_id}}", "disabled": true}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Leave Balance",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/entitlements/balance?employee_id={{employee_id}}&leave_type_id={{leave_type_id}}",
+							"query": [
+								{"key": "employee_id", "value": "{{employee_id}}"},
+								{"key": "leave_type_id", "value": "{{leave_type_id}}"}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Leave Requests",
+			"item": [
+				{
+					"name": "Create Approval Flow",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/approval-flows",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"leave_plan_id\": \"{{leave_plan_id}}\",\n  \"levels\": [\n    {\"level\": 1, \"type\": \"ROLE\", \"value\": \"MANAGER\"}\n  ]\n}"
+						}
+					},
+					"event": [{"listen": "test", "script": {"exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('approval_flow_id', pm.response.json().id); }"]}}]
+				},
+				{
+					"name": "Get Approval Flow",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/approval-flows?leave_plan_id={{leave_plan_id}}",
+							"query": [{"key": "leave_plan_id", "value": "{{leave_plan_id}}"}]
+						}
+					}
+				},
+				{
+					"name": "Submit Leave Request",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/leave-requests",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"employee_id\": \"{{employee_id}}\",\n  \"leave_type_id\": \"{{leave_type_id}}\",\n  \"start_datetime\": \"2025-06-02T09:00:00Z\",\n  \"end_datetime\": \"2025-06-03T18:00:00Z\",\n  \"note\": \"Vacation\"\n}"
+						}
+					},
+					"event": [{"listen": "test", "script": {"exec": ["if (pm.response.code === 201) { pm.collectionVariables.set('leave_request_id', pm.response.json().id); }"]}}]
+				},
+				{
+					"name": "List Leave Requests",
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/leave-requests?employee_id={{employee_id}}",
+							"query": [
+								{"key": "employee_id", "value": "{{employee_id}}", "disabled": true},
+								{"key": "status", "value": "PENDING", "disabled": true}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Leave Request",
+					"request": {
+						"method": "GET",
+						"url": "{{base_url}}/leave-requests/{{leave_request_id}}"
+					}
+				},
+				{
+					"name": "Approve Leave Request",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/leave-requests/{{leave_request_id}}/approve",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"comment\": \"Approved\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Reject Leave Request",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/leave-requests/{{leave_request_id}}/reject",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"comment\": \"Not approved due to project deadline\"\n}"
+						}
+					}
+				},
+				{
+					"name": "Cancel Leave Request",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/leave-requests/{{leave_request_id}}/cancel"
+					}
+				},
+				{
+					"name": "Create Approval Override",
+					"request": {
+						"method": "POST",
+						"url": "{{base_url}}/approval-overrides",
+						"header": [{"key": "Content-Type", "value": "application/json"}],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"leave_request_id\": \"{{leave_request_id}}\",\n  \"levels\": [\n    {\"level\": 1, \"approver_id\": \"approver_user_id\"}\n  ]\n}"
+						}
+					}
+				}
+			]
+		}
+	]
+}
