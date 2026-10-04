@@ -16,4 +16,21 @@
 
     <artifactId>pms-common</artifactId>
 
+    <dependencies>
+
+        <!-- ResponseEntity, @RestControllerAdvice: the shared response/error shapes -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- Only so GlobalExceptionHandler can let security exceptions reach Spring Security -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+    </dependencies>
+
 </project>
