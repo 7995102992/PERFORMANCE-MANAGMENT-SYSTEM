@@ -6,7 +6,10 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
-/** Screen 1.1. {@code applicable_to} and the plant filter need plant data PMS does not store yet. */
+/**
+ * Screen 1.1. {@code applicable_to} is "All Plants" when the cycle covers every plant, otherwise null: plant
+ * names belong to the Sentrifugo system, which PMS cannot resolve yet (ids are on the cycle detail).
+ */
 public record PmsCycleListResponse(
         @JsonProperty("items") List<Item> items,
         @JsonProperty("total") long total,
@@ -19,6 +22,7 @@ public record PmsCycleListResponse(
             @JsonProperty("type") String type,
             @JsonProperty("period_start") LocalDate periodStart,
             @JsonProperty("period_end") LocalDate periodEnd,
+            @JsonProperty("applicable_to") String applicableTo,
             @JsonProperty("status") String status,
             @JsonProperty("created_on") LocalDate createdOn) {
     }

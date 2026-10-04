@@ -11,7 +11,7 @@ import java.util.List;
 public class PmsCycleCsvExporter {
 
     private static final String[] HEADERS = {
-            "Cycle ID", "Cycle Name", "Type", "Period Start", "Period End", "Created On", "Status",
+            "Cycle ID", "Cycle Name", "Type", "Period Start", "Period End", "Applicable To", "Created On", "Status",
     };
 
     public byte[] toCsv(List<PmsCycleListResponse.Item> items) {
@@ -23,6 +23,7 @@ public class PmsCycleCsvExporter {
                     .append(field(item.type())).append(',')
                     .append(field(String.valueOf(item.periodStart()))).append(',')
                     .append(field(String.valueOf(item.periodEnd()))).append(',')
+                    .append(field(item.applicableTo())).append(',')
                     .append(field(String.valueOf(item.createdOn()))).append(',')
                     .append(field(item.status()))
                     .append("\r\n");

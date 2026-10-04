@@ -22,10 +22,35 @@ public final class PmsCycleSpecifications {
 
     public static Specification<PmsCycleEntity> matching(UUID organisationId, String search,
                                                          Integer financialYearStart, PmsCycleType type) {
+        return matching(organisationId, search, financialYearStart, type, null);
+    }
+
+    public static Specification<PmsCycleEntity> matching(UUID organisationId, String search,
+                                                         Integer financialYearStart, PmsCycleType type,
+                                                         UUID plantId) {
         return inOrganisation(organisationId)
                 .and(matchesSearch(search))
                 .and(inFinancialYear(financialYearStart))
-                .and(typeIs(type));
+                .and(typeIs(type))
+                .and(coversPlant(plantId));
+    }
+
+    /** Cycles that list the plant explicitly, or whose applicability is "all plants". */
+    private static Specification<PmsCycleEntity> coversPlant(UUID plantId) {
+        if (plantId == null) {
+            return always();
+        }
+        return (root, query, cb) -> {
+            var plants = query.subquery(UUID.class);
+            var plant = plants.from(com.sentrifugo.db.entity.PmsCyclePlantEntity.class);
+            plants.select(plant.get("id")).where(
+                    cb.equal(plant.get("cycle"), root), cb.equal(plant.get("plantId"), plantId));
+            var all = query.subquery(UUID.class);
+            var applicability = all.from(com.sentrifugo.db.entity.PmsCycleApplicabilityEntity.class);
+            all.select(applicability.get("id")).where(
+                    cb.equal(applicability.get("cycle"), root), cb.isTrue(applicability.get("allPlants")));
+            return cb.or(cb.exists(plants), cb.exists(all));
+        };
     }
 
     public static Specification<PmsCycleEntity> statusIs(PmsCycleStatus status) {

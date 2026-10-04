@@ -3,19 +3,20 @@ package com.sentrifugo.pms.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
-/**
- * Nested cycle shape for screens 1.2-1.5. {@code stages}, {@code applicability} and {@code applicable_to} are
- * absent until their persistence model exists.
- */
+/** Nested cycle shape for screens 1.2-1.5, mirroring {@link PmsCycleRequest}. */
 public record PmsCycleResponse(
         @JsonProperty("id") UUID id,
         @JsonProperty("cycle_code") String cycleCode,
         @JsonProperty("status") String status,
         @JsonProperty("created_on") LocalDate createdOn,
         @JsonProperty("published_on") LocalDate publishedOn,
+        @JsonProperty("applicable_to") String applicableTo,
         @JsonProperty("basic") Basic basic,
+        @JsonProperty("stages") List<Stage> stages,
+        @JsonProperty("applicability") Applicability applicability,
         @JsonProperty("finalize") Finalize finalizeSettings,
         @JsonProperty("current_step") Integer currentStep,
         @JsonProperty("completed_step") Integer completedStep) {
@@ -26,6 +27,25 @@ public record PmsCycleResponse(
             @JsonProperty("type") String type,
             @JsonProperty("period_start") LocalDate periodStart,
             @JsonProperty("period_end") LocalDate periodEnd) {
+    }
+
+    public record Stage(
+            @JsonProperty("stage") String stage,
+            @JsonProperty("start_date") LocalDate startDate,
+            @JsonProperty("end_date") LocalDate endDate,
+            @JsonProperty("notify") boolean notifyEnabled) {
+    }
+
+    public record Applicability(
+            @JsonProperty("all_plants") boolean allPlants,
+            @JsonProperty("plant_ids") List<UUID> plantIds,
+            @JsonProperty("all_departments") boolean allDepartments,
+            @JsonProperty("department_ids") List<UUID> departmentIds,
+            @JsonProperty("employment_types") List<String> employmentTypes,
+            @JsonProperty("min_service_months") Integer minServiceMonths,
+            @JsonProperty("service_as_on") LocalDate serviceAsOn,
+            @JsonProperty("exclude_probation") boolean excludeProbation,
+            @JsonProperty("exclude_notice_period") boolean excludeNoticePeriod) {
     }
 
     public record Finalize(
