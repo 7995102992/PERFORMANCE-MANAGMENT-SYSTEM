@@ -1,0 +1,13 @@
+package com.sentrifugo.db.enums;
+
+public enum PmsCycleStageType {
+    GOAL_SETTING,
+    EMPLOYEE_ACKNOWLEDGEMENT,
+    HOD_APPROVAL,
+    PROGRESS_TRACKING,
+    MID_YEAR_REVIEW,
+    SELF_APPRAISAL,
+    MANAGER_APPRAISAL,
+    HOD_REVIEW,
+    CALIBRATION_FINAL_APPROVAL
+}
