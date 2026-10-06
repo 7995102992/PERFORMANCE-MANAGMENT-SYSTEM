@@ -10,11 +10,11 @@ import java.util.UUID;
 public interface PmsKpiMasterRepository extends JpaRepository<PmsKpiMasterEntity, UUID> {
 
     /** Organisation-scoped lookup: the way to load a row without crossing tenants. */
-    Optional<PmsKpiMasterEntity> findByIdAndOrganisationId(UUID id, UUID organisationId);
+    Optional<PmsKpiMasterEntity> findByIdAndOrganisationId(UUID id, String organisationId);
 
-    List<PmsKpiMasterEntity> findByOrganisationIdAndIsActiveTrueOrderByCreatedDateAsc(UUID organisationId);
+    List<PmsKpiMasterEntity> findByOrganisationIdAndIsActiveTrueOrderByCreatedDateAsc(String organisationId);
 
-    List<PmsKpiMasterEntity> findByOrganisationIdAndIdIn(UUID organisationId, java.util.Collection<UUID> ids);
+    List<PmsKpiMasterEntity> findByOrganisationIdAndIdIn(String organisationId, java.util.Collection<UUID> ids);
 
     boolean existsByKraIdAndIsActiveTrue(UUID kraId);
 

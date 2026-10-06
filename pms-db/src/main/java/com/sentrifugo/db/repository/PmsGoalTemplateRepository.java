@@ -12,5 +12,5 @@ public interface PmsGoalTemplateRepository extends JpaRepository<PmsGoalTemplate
         JpaSpecificationExecutor<PmsGoalTemplateEntity> {
 
     /** Organisation-scoped lookup: the way to load a row without crossing tenants. */
-    Optional<PmsGoalTemplateEntity> findByIdAndOrganisationId(UUID id, UUID organisationId);
+    Optional<PmsGoalTemplateEntity> findByIdAndOrganisationId(UUID id, String organisationId);
 }

@@ -19,7 +19,7 @@ public class PmsGoalTemplateDTO extends BaseDTO {
 
     private UUID id;
 
-    private UUID organisationId;
+    private String organisationId;
 
     private String financialYear;
 
@@ -27,11 +27,11 @@ public class PmsGoalTemplateDTO extends BaseDTO {
 
     private String description;
 
-    private UUID departmentId;
+    private String departmentId;
 
-    private UUID roleId;
+    private String roleId;
 
-    private UUID plantId;
+    private String plantId;
 
     private LocalDate effectiveFrom;
 

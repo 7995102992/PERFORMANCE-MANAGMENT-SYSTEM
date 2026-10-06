@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,8 +48,8 @@ public class PmsGoalTemplateController {
     public ResponseEntity<ApiResponse<List<PmsGoalTemplateListResponse>>> getGoalTemplates(
             @AuthenticationPrincipal PmsUserPrincipal user,
             @RequestParam(name = "financial_year", required = false) String financialYear,
-            @RequestParam(name = "department_id", required = false) UUID departmentId,
-            @RequestParam(name = "plant_id", required = false) UUID plantId,
+            @RequestParam(name = "department_id", required = false) String departmentId,
+            @RequestParam(name = "plant_id", required = false) String plantId,
             @RequestParam(required = false) String search) {
         log.info("Fetching goal templates");
         List<PmsGoalTemplateListResponse> templates = service.getGoalTemplates(PmsPrincipals.organisationId(user),
@@ -81,6 +82,18 @@ public class PmsGoalTemplateController {
                 service.createGoalTemplate(PmsPrincipals.organisationId(user), request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(template, "Goal template created successfully"));
+    }
+
+    @DeleteMapping("/delete/goal-template/{templateId}")
+    @RequirePermission(module = "performance_management", action = "manage_goal_templates")
+    @Operation(summary = "Delete a draft goal template (screen 2.2)",
+            description = "Deletes a template that is still a draft, with its KRA, KPI and competency rows. "
+                    + "Active or inactive templates cannot be deleted.")
+    public ResponseEntity<ApiResponse<Void>> deleteGoalTemplate(
+            @AuthenticationPrincipal PmsUserPrincipal user, @PathVariable UUID templateId) {
+        log.info("Deleting goal template: {}", templateId);
+        service.deleteDraftTemplate(PmsPrincipals.organisationId(user), templateId);
+        return ResponseEntity.ok(ApiResponse.ok(null, "Goal template deleted successfully"));
     }
 
     @PutMapping("/update/goal-template/{templateId}")

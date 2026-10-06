@@ -31,7 +31,7 @@ import java.util.UUID;
 public class PmsGoalTemplateEntity extends BaseEntity<UUID> {
 
     @Column(name = "organisation_id", nullable = false)
-    private UUID organisationId;
+    private String organisationId;
 
     @Column(name = "financial_year", nullable = false, length = 20)
     private String financialYear;
@@ -43,14 +43,14 @@ public class PmsGoalTemplateEntity extends BaseEntity<UUID> {
     private String description;
 
     @Column(name = "department_id", nullable = false)
-    private UUID departmentId;
+    private String departmentId;
 
     @Column(name = "role_id", nullable = false)
-    private UUID roleId;
+    private String roleId;
 
     /** Shown on screen 2.1; may be derived from role/department. */
     @Column(name = "plant_id")
-    private UUID plantId;
+    private String plantId;
 
     @Column(name = "effective_from", nullable = false)
     private LocalDate effectiveFrom;

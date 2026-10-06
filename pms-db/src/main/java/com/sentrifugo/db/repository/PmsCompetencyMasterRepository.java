@@ -11,13 +11,13 @@ import java.util.UUID;
 public interface PmsCompetencyMasterRepository extends JpaRepository<PmsCompetencyMasterEntity, UUID> {
 
     /** Organisation-scoped lookup: the way to load a row without crossing tenants. */
-    Optional<PmsCompetencyMasterEntity> findByIdAndOrganisationId(UUID id, UUID organisationId);
+    Optional<PmsCompetencyMasterEntity> findByIdAndOrganisationId(UUID id, String organisationId);
 
-    List<PmsCompetencyMasterEntity> findByOrganisationIdAndIsActiveTrueOrderByCreatedDateAsc(UUID organisationId);
+    List<PmsCompetencyMasterEntity> findByOrganisationIdAndIsActiveTrueOrderByCreatedDateAsc(String organisationId);
 
-    List<PmsCompetencyMasterEntity> findByOrganisationIdAndIdIn(UUID organisationId, Collection<UUID> ids);
+    List<PmsCompetencyMasterEntity> findByOrganisationIdAndIdIn(String organisationId, Collection<UUID> ids);
 
-    boolean existsByOrganisationIdAndNameIgnoreCaseAndIsActiveTrue(UUID organisationId, String name);
+    boolean existsByOrganisationIdAndNameIgnoreCaseAndIsActiveTrue(String organisationId, String name);
 
-    boolean existsByOrganisationIdAndNameIgnoreCaseAndIsActiveTrueAndIdNot(UUID organisationId, String name, UUID id);
+    boolean existsByOrganisationIdAndNameIgnoreCaseAndIsActiveTrueAndIdNot(String organisationId, String name, UUID id);
 }

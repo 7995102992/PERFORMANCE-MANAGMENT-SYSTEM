@@ -54,7 +54,7 @@ public class PmsCycleController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String type,
-            @RequestParam(name = "plant_id", required = false) UUID plantId,
+            @RequestParam(name = "plant_id", required = false) String plantId,
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int skip,
             @RequestParam(defaultValue = "20") int limit) {
@@ -73,7 +73,7 @@ public class PmsCycleController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String type,
-            @RequestParam(name = "plant_id", required = false) UUID plantId,
+            @RequestParam(name = "plant_id", required = false) String plantId,
             @RequestParam(required = false) String status) {
         log.info("Exporting PMS cycles");
         byte[] csv = csvExporter.toCsv(pmsCycleService.getCyclesForExport(PmsPrincipals.organisationId(user),

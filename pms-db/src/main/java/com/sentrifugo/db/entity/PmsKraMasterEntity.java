@@ -26,7 +26,7 @@ import java.util.UUID;
 public class PmsKraMasterEntity extends BaseEntity<UUID> {
 
     @Column(name = "organisation_id", nullable = false)
-    private UUID organisationId;
+    private String organisationId;
 
     @Column(name = "name", nullable = false, length = 200)
     private String name;

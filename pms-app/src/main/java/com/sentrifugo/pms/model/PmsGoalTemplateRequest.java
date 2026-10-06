@@ -16,9 +16,9 @@ public record PmsGoalTemplateRequest(
         @JsonProperty("financial_year") @NotBlank @Size(max = 20) String financialYear,
         @JsonProperty("template_name") @NotBlank @Size(max = 200) String templateName,
         @JsonProperty("description") @Size(max = 2000) String description,
-        @JsonProperty("department_id") @NotNull UUID departmentId,
-        @JsonProperty("role_id") @NotNull UUID roleId,
-        @JsonProperty("plant_id") UUID plantId,
+        @JsonProperty("department_id") @NotNull String departmentId,
+        @JsonProperty("role_id") @NotNull String roleId,
+        @JsonProperty("plant_id") String plantId,
         @JsonProperty("effective_from") @NotNull LocalDate effectiveFrom,
         @JsonProperty("status") String status) {
 }

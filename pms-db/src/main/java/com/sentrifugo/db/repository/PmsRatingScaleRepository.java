@@ -10,9 +10,9 @@ import java.util.UUID;
 public interface PmsRatingScaleRepository extends JpaRepository<PmsRatingScaleEntity, UUID> {
 
     /** Organisation-scoped lookup: the way to load a row without crossing tenants. */
-    Optional<PmsRatingScaleEntity> findByIdAndOrganisationId(UUID id, UUID organisationId);
+    Optional<PmsRatingScaleEntity> findByIdAndOrganisationId(UUID id, String organisationId);
 
-    List<PmsRatingScaleEntity> findByOrganisationIdAndIsActiveTrueOrderByCreatedDateAsc(UUID organisationId);
+    List<PmsRatingScaleEntity> findByOrganisationIdAndIsActiveTrueOrderByCreatedDateAsc(String organisationId);
 
-    List<PmsRatingScaleEntity> findByOrganisationIdAndIsDefaultTrue(UUID organisationId);
+    List<PmsRatingScaleEntity> findByOrganisationIdAndIsDefaultTrue(String organisationId);
 }

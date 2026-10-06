@@ -22,7 +22,7 @@ public class PmsCycleDTO extends BaseDTO {
 
     private UUID id;
 
-    private UUID organisationId;
+    private String organisationId;
 
     private String cycleCode;
 

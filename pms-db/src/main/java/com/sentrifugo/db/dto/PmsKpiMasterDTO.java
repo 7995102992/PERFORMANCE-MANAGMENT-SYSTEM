@@ -19,7 +19,7 @@ public class PmsKpiMasterDTO extends BaseDTO {
 
     private UUID id;
 
-    private UUID organisationId;
+    private String organisationId;
 
     private String name;
 

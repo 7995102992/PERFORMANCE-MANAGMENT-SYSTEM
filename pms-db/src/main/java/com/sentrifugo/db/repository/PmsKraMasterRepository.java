@@ -10,12 +10,12 @@ import java.util.UUID;
 public interface PmsKraMasterRepository extends JpaRepository<PmsKraMasterEntity, UUID> {
 
     /** Organisation-scoped lookup: the way to load a row without crossing tenants. */
-    Optional<PmsKraMasterEntity> findByIdAndOrganisationId(UUID id, UUID organisationId);
+    Optional<PmsKraMasterEntity> findByIdAndOrganisationId(UUID id, String organisationId);
 
     /** Rows not removed by the Delete action (is_active = true), oldest first. */
-    List<PmsKraMasterEntity> findByOrganisationIdAndIsActiveTrueOrderByCreatedDateAsc(UUID organisationId);
+    List<PmsKraMasterEntity> findByOrganisationIdAndIsActiveTrueOrderByCreatedDateAsc(String organisationId);
 
-    boolean existsByOrganisationIdAndNameIgnoreCaseAndIsActiveTrue(UUID organisationId, String name);
+    boolean existsByOrganisationIdAndNameIgnoreCaseAndIsActiveTrue(String organisationId, String name);
 
-    boolean existsByOrganisationIdAndNameIgnoreCaseAndIsActiveTrueAndIdNot(UUID organisationId, String name, UUID id);
+    boolean existsByOrganisationIdAndNameIgnoreCaseAndIsActiveTrueAndIdNot(String organisationId, String name, UUID id);
 }

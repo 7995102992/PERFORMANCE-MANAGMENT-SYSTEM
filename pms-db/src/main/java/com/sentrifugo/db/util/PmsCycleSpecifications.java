@@ -20,14 +20,14 @@ public final class PmsCycleSpecifications {
     private PmsCycleSpecifications() {
     }
 
-    public static Specification<PmsCycleEntity> matching(UUID organisationId, String search,
+    public static Specification<PmsCycleEntity> matching(String organisationId, String search,
                                                          Integer financialYearStart, PmsCycleType type) {
         return matching(organisationId, search, financialYearStart, type, null);
     }
 
-    public static Specification<PmsCycleEntity> matching(UUID organisationId, String search,
+    public static Specification<PmsCycleEntity> matching(String organisationId, String search,
                                                          Integer financialYearStart, PmsCycleType type,
-                                                         UUID plantId) {
+                                                         String plantId) {
         return inOrganisation(organisationId)
                 .and(matchesSearch(search))
                 .and(inFinancialYear(financialYearStart))
@@ -36,7 +36,7 @@ public final class PmsCycleSpecifications {
     }
 
     /** Cycles that list the plant explicitly, or whose applicability is "all plants". */
-    private static Specification<PmsCycleEntity> coversPlant(UUID plantId) {
+    private static Specification<PmsCycleEntity> coversPlant(String plantId) {
         if (plantId == null) {
             return always();
         }
@@ -64,7 +64,7 @@ public final class PmsCycleSpecifications {
         return (root, query, cb) -> cb.conjunction();
     }
 
-    private static Specification<PmsCycleEntity> inOrganisation(UUID organisationId) {
+    private static Specification<PmsCycleEntity> inOrganisation(String organisationId) {
         return (root, query, cb) -> cb.equal(root.get("organisationId"), organisationId);
     }
 

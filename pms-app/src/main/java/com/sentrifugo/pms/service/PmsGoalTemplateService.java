@@ -81,8 +81,8 @@ public class PmsGoalTemplateService {
     // ── Reads ────────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public List<PmsGoalTemplateListResponse> getGoalTemplates(UUID organisationId, String financialYear,
-                                                              UUID departmentId, UUID plantId, String search) {
+    public List<PmsGoalTemplateListResponse> getGoalTemplates(String organisationId, String financialYear,
+                                                              String departmentId, String plantId, String search) {
         var spec = PmsGoalTemplateSpecifications.matching(organisationId, financialYear, departmentId, plantId,
                 search);
         return templateRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "createdDate")).stream()
@@ -92,15 +92,29 @@ public class PmsGoalTemplateService {
     }
 
     @Transactional(readOnly = true)
-    public PmsGoalTemplateResponse getGoalTemplate(UUID organisationId, UUID templateId) {
+    public PmsGoalTemplateResponse getGoalTemplate(String organisationId, UUID templateId) {
         return toResponse(find(organisationId, templateId));
     }
 
     // ── Writes ───────────────────────────────────────────────────────────────
 
+    /** Deletes a draft template with its KRA, KPI and competency rows. Active or inactive templates are kept. */
+    @Transactional
+    public void deleteDraftTemplate(String organisationId, UUID templateId) {
+        PmsGoalTemplateEntity template = find(organisationId, templateId);
+        if (template.getStatus() != PmsTemplateStatus.DRAFT) {
+            throw DomainException.unprocessable("Only draft templates can be deleted.", "PMS_TEMPLATE_NOT_DRAFT");
+        }
+        log.info("Deleting draft goal template {}", templateId);
+        templateKpiRepository.deleteByTemplateId(templateId);
+        templateKraRepository.deleteByTemplateId(templateId);
+        templateCompetencyRepository.deleteByTemplateId(templateId);
+        templateRepository.delete(template);
+    }
+
     /** Screen 2.2 "Save and Next". */
     @Transactional
-    public PmsGoalTemplateResponse createGoalTemplate(UUID organisationId, PmsGoalTemplateRequest request) {
+    public PmsGoalTemplateResponse createGoalTemplate(String organisationId, PmsGoalTemplateRequest request) {
         log.info("Creating goal template for organisation {}", organisationId);
         PmsTemplateStatus status = initialStatus(request.status());
         PmsGoalTemplateEntity template = templateMapper.toEntity(PmsGoalTemplateDTO.builder()
@@ -118,7 +132,7 @@ public class PmsGoalTemplateService {
     }
 
     @Transactional
-    public PmsGoalTemplateResponse updateGoalTemplate(UUID organisationId, UUID templateId,
+    public PmsGoalTemplateResponse updateGoalTemplate(String organisationId, UUID templateId,
                                                       PmsGoalTemplateRequest request) {
         log.info("Updating goal template {}", templateId);
         PmsGoalTemplateEntity template = find(organisationId, templateId);
@@ -139,7 +153,7 @@ public class PmsGoalTemplateService {
 
     /** Screen 2.3 "Save as Draft" / "Save and Next": replaces the template's KRA and KPI selection. */
     @Transactional
-    public PmsGoalTemplateResponse saveKraKpi(UUID organisationId, UUID templateId,
+    public PmsGoalTemplateResponse saveKraKpi(String organisationId, UUID templateId,
                                               PmsGoalTemplateKraKpiRequest request) {
         log.info("Saving KRA/KPI configuration of goal template {}", templateId);
         PmsGoalTemplateEntity template = find(organisationId, templateId);
@@ -226,7 +240,7 @@ public class PmsGoalTemplateService {
 
     /** Screen 2.4 "Save": replaces the competency selection, which must total 100. */
     @Transactional
-    public PmsGoalTemplateResponse saveCompetencies(UUID organisationId, UUID templateId,
+    public PmsGoalTemplateResponse saveCompetencies(String organisationId, UUID templateId,
                                                     PmsGoalTemplateCompetencyRequest request) {
         log.info("Saving competencies of goal template {}", templateId);
         PmsGoalTemplateEntity template = find(organisationId, templateId);
@@ -274,7 +288,7 @@ public class PmsGoalTemplateService {
 
     // ── internals ────────────────────────────────────────────────────────────
 
-    private PmsGoalTemplateEntity find(UUID organisationId, UUID templateId) {
+    private PmsGoalTemplateEntity find(String organisationId, UUID templateId) {
         return templateRepository.findByIdAndOrganisationId(templateId, organisationId)
                 .filter(t -> Boolean.TRUE.equals(t.getIsActive()))
                 .orElseThrow(() -> DomainException.notFound("Goal template not found", "PMS_TEMPLATE_NOT_FOUND"));

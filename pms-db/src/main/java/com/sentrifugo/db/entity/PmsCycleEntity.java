@@ -37,7 +37,7 @@ import java.util.UUID;
 public class PmsCycleEntity extends BaseEntity<UUID> {
 
     @Column(name = "organisation_id", nullable = false)
-    private UUID organisationId;
+    private String organisationId;
 
     @Column(name = "cycle_code", nullable = false, unique = true, length = 30)
     private String cycleCode;

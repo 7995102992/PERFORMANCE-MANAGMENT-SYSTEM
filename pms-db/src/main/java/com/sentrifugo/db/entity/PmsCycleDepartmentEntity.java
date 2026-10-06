@@ -29,5 +29,5 @@ public class PmsCycleDepartmentEntity extends BaseEntity<UUID> {
     private PmsCycleEntity cycle;
 
     @Column(name = "department_id", nullable = false)
-    private UUID departmentId;
+    private String departmentId;
 }

@@ -40,7 +40,7 @@ public class PmsRatingScaleService {
     private final PmsRatingScaleLevelMapper levelMapper;
 
     @Transactional(readOnly = true)
-    public List<PmsRatingScaleResponse> getRatingScales(UUID organisationId, String status) {
+    public List<PmsRatingScaleResponse> getRatingScales(String organisationId, String status) {
         PmsMasterStatus filter = status == null || status.isBlank() ? null : parseStatus(status);
         return scaleRepository.findByOrganisationIdAndIsActiveTrueOrderByCreatedDateAsc(organisationId).stream()
                 .filter(s -> filter == null || s.getStatus() == filter)
@@ -49,12 +49,12 @@ public class PmsRatingScaleService {
     }
 
     @Transactional(readOnly = true)
-    public PmsRatingScaleResponse getRatingScale(UUID organisationId, UUID scaleId) {
+    public PmsRatingScaleResponse getRatingScale(String organisationId, UUID scaleId) {
         return toResponse(find(organisationId, scaleId));
     }
 
     @Transactional
-    public PmsRatingScaleResponse createRatingScale(UUID organisationId, PmsRatingScaleRequest request) {
+    public PmsRatingScaleResponse createRatingScale(String organisationId, PmsRatingScaleRequest request) {
         log.info("Creating rating scale for organisation {}", organisationId);
         validateLevels(request.levels());
         PmsRatingScaleEntity scale = scaleMapper.toEntity(PmsRatingScaleDTO.builder()
@@ -74,7 +74,7 @@ public class PmsRatingScaleService {
 
     /** Screen 2.10 "Save Scale": replaces the scale's settings and syncs its levels by rating value. */
     @Transactional
-    public PmsRatingScaleResponse updateRatingScale(UUID organisationId, UUID scaleId,
+    public PmsRatingScaleResponse updateRatingScale(String organisationId, UUID scaleId,
                                                     PmsRatingScaleRequest request) {
         log.info("Updating rating scale {}", scaleId);
         PmsRatingScaleEntity scale = find(organisationId, scaleId);
@@ -104,7 +104,7 @@ public class PmsRatingScaleService {
     // ── internals ────────────────────────────────────────────────────────────
 
     /** Only one scale per organisation may be the default for new cycles. */
-    private void clearOtherDefaults(UUID organisationId, PmsRatingScaleEntity scale) {
+    private void clearOtherDefaults(String organisationId, PmsRatingScaleEntity scale) {
         if (!Boolean.TRUE.equals(scale.getIsDefault())) {
             return;
         }
@@ -169,7 +169,7 @@ public class PmsRatingScaleService {
         }
     }
 
-    private PmsRatingScaleEntity find(UUID organisationId, UUID scaleId) {
+    private PmsRatingScaleEntity find(String organisationId, UUID scaleId) {
         return scaleRepository.findByIdAndOrganisationId(scaleId, organisationId)
                 .filter(s -> Boolean.TRUE.equals(s.getIsActive()))
                 .orElseThrow(() -> DomainException.notFound("Rating scale not found",

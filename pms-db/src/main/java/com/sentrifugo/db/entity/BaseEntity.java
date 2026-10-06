@@ -39,11 +39,11 @@ public abstract class BaseEntity<ID extends Serializable> {
 
     @CreatedBy
     @Column(name = "created_by")
-    private UUID createdBy;
+    private String createdBy;
 
     @LastModifiedBy
     @Column(name = "modified_by")
-    private UUID modifiedBy;
+    private String modifiedBy;
 
     @CreatedDate
     @Column(name = "created_date", updatable = false)

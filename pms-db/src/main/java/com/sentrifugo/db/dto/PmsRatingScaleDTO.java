@@ -18,7 +18,7 @@ public class PmsRatingScaleDTO extends BaseDTO {
 
     private UUID id;
 
-    private UUID organisationId;
+    private String organisationId;
 
     private String name;
 

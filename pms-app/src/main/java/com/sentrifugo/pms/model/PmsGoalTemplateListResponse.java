@@ -13,9 +13,9 @@ public record PmsGoalTemplateListResponse(
         @JsonProperty("id") UUID id,
         @JsonProperty("template_name") String templateName,
         @JsonProperty("financial_year") String financialYear,
-        @JsonProperty("department_id") UUID departmentId,
-        @JsonProperty("role_id") UUID roleId,
-        @JsonProperty("plant_id") UUID plantId,
+        @JsonProperty("department_id") String departmentId,
+        @JsonProperty("role_id") String roleId,
+        @JsonProperty("plant_id") String plantId,
         @JsonProperty("effective_from") LocalDate effectiveFrom,
         @JsonProperty("status") String status) {
 }

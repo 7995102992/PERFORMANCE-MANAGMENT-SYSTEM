@@ -16,7 +16,7 @@ import java.util.UUID;
 public interface PmsCycleRepository extends JpaRepository<PmsCycleEntity, UUID>,
         JpaSpecificationExecutor<PmsCycleEntity> {
 
-    Optional<PmsCycleEntity> findByIdAndOrganisationId(UUID id, UUID organisationId);
+    Optional<PmsCycleEntity> findByIdAndOrganisationId(UUID id, String organisationId);
 
     boolean existsByCycleCode(String cycleCode);
 }

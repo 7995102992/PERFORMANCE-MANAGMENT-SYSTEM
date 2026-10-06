@@ -17,7 +17,7 @@ public class PmsCyclePlantDTO extends BaseDTO {
 
     private UUID id;
 
-    private UUID plantId;
+    private String plantId;
 
     private UUID cycleId;
 }

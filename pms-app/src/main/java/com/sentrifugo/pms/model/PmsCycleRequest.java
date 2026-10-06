@@ -49,9 +49,9 @@ public record PmsCycleRequest(
      */
     public record Applicability(
             @JsonProperty("all_plants") Boolean allPlants,
-            @JsonProperty("plant_ids") List<UUID> plantIds,
+            @JsonProperty("plant_ids") List<String> plantIds,
             @JsonProperty("all_departments") Boolean allDepartments,
-            @JsonProperty("department_ids") List<UUID> departmentIds,
+            @JsonProperty("department_ids") List<String> departmentIds,
             @JsonProperty("employment_types") List<String> employmentTypes,
             @JsonProperty("min_service_months") @Min(0) Integer minServiceMonths,
             @JsonProperty("service_as_on") LocalDate serviceAsOn,

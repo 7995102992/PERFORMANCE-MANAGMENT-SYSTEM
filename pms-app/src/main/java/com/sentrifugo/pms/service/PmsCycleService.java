@@ -85,8 +85,8 @@ public class PmsCycleService {
     // ── Reads ────────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public PmsCycleListResponse getCycles(UUID organisationId, String search, Integer year, String type,
-                                          UUID plantId, String status, int skip, int limit) {
+    public PmsCycleListResponse getCycles(String organisationId, String search, Integer year, String type,
+                                          String plantId, String status, int skip, int limit) {
         PmsCycleType typeFilter = isBlank(type) ? null : parseType(type);
         PmsCycleStatus statusFilter = isBlank(status) ? null : parseStatus(status);
         int pageSize = limit <= 0 ? DEFAULT_PAGE_SIZE : Math.min(limit, MAX_PAGE_SIZE);
@@ -111,8 +111,8 @@ public class PmsCycleService {
     }
 
     @Transactional(readOnly = true)
-    public List<PmsCycleListResponse.Item> getCyclesForExport(UUID organisationId, String search, Integer year,
-                                                              String type, UUID plantId, String status) {
+    public List<PmsCycleListResponse.Item> getCyclesForExport(String organisationId, String search, Integer year,
+                                                              String type, String plantId, String status) {
         PmsCycleType typeFilter = isBlank(type) ? null : parseType(type);
         PmsCycleStatus statusFilter = isBlank(status) ? null : parseStatus(status);
         var spec = PmsCycleSpecifications.matching(organisationId, search, year, typeFilter, plantId)
@@ -122,12 +122,12 @@ public class PmsCycleService {
     }
 
     @Transactional(readOnly = true)
-    public PmsCycleResponse getCycle(UUID organisationId, UUID cycleId) {
+    public PmsCycleResponse getCycle(String organisationId, UUID cycleId) {
         return toResponse(findCycle(organisationId, cycleId));
     }
 
     @Transactional(readOnly = true)
-    public PmsCycleActivationResponse getActivation(UUID organisationId, UUID cycleId) {
+    public PmsCycleActivationResponse getActivation(String organisationId, UUID cycleId) {
         PmsCycleEntity cycle = findCycle(organisationId, cycleId);
         if (cycle.getStatus() == PmsCycleStatus.DRAFT) {
             throw DomainException.conflict("This cycle has not been published yet.", "PMS_CYCLE_NOT_PUBLISHED");
@@ -139,7 +139,7 @@ public class PmsCycleService {
 
     /** Wizard step 1 "Next" / later steps' "Next": saves whatever sections the payload carries as a DRAFT. */
     @Transactional
-    public PmsCycleResponse createCycle(UUID organisationId, PmsCycleRequest request) {
+    public PmsCycleResponse createCycle(String organisationId, PmsCycleRequest request) {
         log.info("Creating PMS cycle for organisation {}", organisationId);
         PmsCycleType type = validateBasic(request.basic());
         validateStages(request.stages());
@@ -174,7 +174,7 @@ public class PmsCycleService {
     }
 
     @Transactional
-    public PmsCycleResponse updateCycle(UUID organisationId, UUID cycleId, PmsCycleRequest request) {
+    public PmsCycleResponse updateCycle(String organisationId, UUID cycleId, PmsCycleRequest request) {
         log.info("Updating PMS cycle {}", cycleId);
         PmsCycleEntity cycle = findCycle(organisationId, cycleId);
         if (cycle.getStatus() != PmsCycleStatus.DRAFT && cycle.getStatus() != PmsCycleStatus.ACTIVE) {
@@ -212,7 +212,7 @@ public class PmsCycleService {
 
     /** Screen 1.5 "Publish Cycle": DRAFT to ACTIVE once the whole configuration is present. */
     @Transactional
-    public PmsCycleActivationResponse publishCycle(UUID organisationId, UUID cycleId) {
+    public PmsCycleActivationResponse publishCycle(String organisationId, UUID cycleId) {
         log.info("Publishing PMS cycle {}", cycleId);
         PmsCycleEntity cycle = findCycle(organisationId, cycleId);
         if (cycle.getStatus() != PmsCycleStatus.DRAFT) {
@@ -231,7 +231,7 @@ public class PmsCycleService {
     }
 
     @Transactional
-    public PmsCycleResponse cancelCycle(UUID organisationId, UUID cycleId) {
+    public PmsCycleResponse cancelCycle(String organisationId, UUID cycleId) {
         log.info("Cancelling PMS cycle {}", cycleId);
         PmsCycleEntity cycle = findCycle(organisationId, cycleId);
         if (cycle.getStatus() != PmsCycleStatus.DRAFT && cycle.getStatus() != PmsCycleStatus.ACTIVE) {
@@ -269,8 +269,8 @@ public class PmsCycleService {
     private void saveApplicability(PmsCycleEntity cycle, PmsCycleRequest.Applicability a) {
         boolean allPlants = flag(a.allPlants());
         boolean allDepartments = a.allDepartments() == null || a.allDepartments();
-        Set<UUID> plantIds = allPlants ? Set.of() : distinct(a.plantIds());
-        Set<UUID> departmentIds = allDepartments ? Set.of() : distinct(a.departmentIds());
+        Set<String> plantIds = allPlants ? Set.of() : distinct(a.plantIds());
+        Set<String> departmentIds = allDepartments ? Set.of() : distinct(a.departmentIds());
         Set<PmsEmploymentType> employmentTypes = new java.util.LinkedHashSet<>();
         if (a.employmentTypes() != null) {
             a.employmentTypes().forEach(t -> employmentTypes.add(parseEmploymentType(t)));
@@ -339,7 +339,7 @@ public class PmsCycleService {
     }
 
     /** A rating scale, when named, must be an active one of the caller's organisation. */
-    private void assertRatingScaleUsable(UUID organisationId, UUID ratingScaleId) {
+    private void assertRatingScaleUsable(String organisationId, UUID ratingScaleId) {
         if (ratingScaleId == null) {
             return;
         }
@@ -353,7 +353,7 @@ public class PmsCycleService {
     }
 
     /** Everything a draft may omit but an active cycle needs; all gaps are reported together. */
-    private void assertPublishable(UUID organisationId, PmsCycleEntity cycle) {
+    private void assertPublishable(String organisationId, PmsCycleEntity cycle) {
         List<String> problems = new ArrayList<>();
         UUID id = cycle.getId();
 
@@ -409,7 +409,7 @@ public class PmsCycleService {
     // ── Internals ────────────────────────────────────────────────────────────
 
     /** Organisation-scoped lookup: a cycle of another organisation is indistinguishable from a missing one. */
-    private PmsCycleEntity findCycle(UUID organisationId, UUID cycleId) {
+    private PmsCycleEntity findCycle(String organisationId, UUID cycleId) {
         return cycleRepository.findByIdAndOrganisationId(cycleId, organisationId)
                 .orElseThrow(() -> DomainException.notFound("Cycle not found", "PMS_CYCLE_NOT_FOUND"));
     }
@@ -529,7 +529,7 @@ public class PmsCycleService {
                 eligibility);
     }
 
-    private static Set<UUID> distinct(List<UUID> ids) {
+    private static <T> Set<T> distinct(List<T> ids) {
         return ids == null ? Set.of() : new java.util.LinkedHashSet<>(new HashSet<>(ids));
     }
 

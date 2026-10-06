@@ -28,7 +28,7 @@ import java.util.UUID;
 public class PmsKpiMasterEntity extends BaseEntity<UUID> {
 
     @Column(name = "organisation_id", nullable = false)
-    private UUID organisationId;
+    private String organisationId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "kra_id", nullable = false)

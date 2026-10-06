@@ -61,13 +61,13 @@ public class PmsMasterService {
     // ── KRA ──────────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public List<PmsKraResponse> getKras(UUID organisationId) {
+    public List<PmsKraResponse> getKras(String organisationId) {
         return kraRepository.findByOrganisationIdAndIsActiveTrueOrderByCreatedDateAsc(organisationId).stream()
                 .map(this::toResponse).toList();
     }
 
     @Transactional
-    public PmsKraResponse createKra(UUID organisationId, PmsKraRequest request) {
+    public PmsKraResponse createKra(String organisationId, PmsKraRequest request) {
         log.info("Creating KRA for organisation {}", organisationId);
         String name = request.name().trim();
         if (kraRepository.existsByOrganisationIdAndNameIgnoreCaseAndIsActiveTrue(organisationId, name)) {
@@ -79,7 +79,7 @@ public class PmsMasterService {
     }
 
     @Transactional
-    public PmsKraResponse updateKra(UUID organisationId, UUID kraId, PmsKraRequest request) {
+    public PmsKraResponse updateKra(String organisationId, UUID kraId, PmsKraRequest request) {
         log.info("Updating KRA {}", kraId);
         PmsKraMasterEntity kra = findKra(organisationId, kraId);
         String name = request.name().trim();
@@ -92,7 +92,7 @@ public class PmsMasterService {
     }
 
     @Transactional
-    public void deleteKra(UUID organisationId, UUID kraId) {
+    public void deleteKra(String organisationId, UUID kraId) {
         log.info("Deleting KRA {}", kraId);
         PmsKraMasterEntity kra = findKra(organisationId, kraId);
         if (kpiRepository.existsByKraIdAndIsActiveTrue(kraId)) {
@@ -108,7 +108,7 @@ public class PmsMasterService {
     // ── KPI ──────────────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public List<PmsKpiResponse> getKpis(UUID organisationId) {
+    public List<PmsKpiResponse> getKpis(String organisationId) {
         return kpiRepository.findByOrganisationIdAndIsActiveTrueOrderByCreatedDateAsc(organisationId).stream()
                 .map(this::toResponse).toList();
     }
@@ -118,7 +118,7 @@ public class PmsMasterService {
     }
 
     @Transactional
-    public PmsKpiResponse createKpi(UUID organisationId, PmsKpiRequest request) {
+    public PmsKpiResponse createKpi(String organisationId, PmsKpiRequest request) {
         log.info("Creating KPI for organisation {}", organisationId);
         PmsKraMasterEntity kra = findKraForKpi(organisationId, request.kraId());
         String name = request.name().trim();
@@ -140,7 +140,7 @@ public class PmsMasterService {
     }
 
     @Transactional
-    public PmsKpiResponse updateKpi(UUID organisationId, UUID kpiId, PmsKpiRequest request) {
+    public PmsKpiResponse updateKpi(String organisationId, UUID kpiId, PmsKpiRequest request) {
         log.info("Updating KPI {}", kpiId);
         PmsKpiMasterEntity kpi = findKpi(organisationId, kpiId);
         PmsKraMasterEntity kra = findKraForKpi(organisationId, request.kraId());
@@ -163,7 +163,7 @@ public class PmsMasterService {
     }
 
     @Transactional
-    public void deleteKpi(UUID organisationId, UUID kpiId) {
+    public void deleteKpi(String organisationId, UUID kpiId) {
         log.info("Deleting KPI {}", kpiId);
         PmsKpiMasterEntity kpi = findKpi(organisationId, kpiId);
         if (templateKpiRepository.existsByKpiId(kpiId)) {
@@ -177,7 +177,7 @@ public class PmsMasterService {
 
     /** Screen 2.9 "Search by competency": a case-insensitive match on the name. */
     @Transactional(readOnly = true)
-    public List<PmsCompetencyResponse> getCompetencies(UUID organisationId, String search) {
+    public List<PmsCompetencyResponse> getCompetencies(String organisationId, String search) {
         String needle = search == null ? "" : search.trim().toLowerCase(Locale.ROOT);
         return competencyRepository.findByOrganisationIdAndIsActiveTrueOrderByCreatedDateAsc(organisationId).stream()
                 .filter(c -> needle.isEmpty() || c.getName().toLowerCase(Locale.ROOT).contains(needle))
@@ -185,7 +185,7 @@ public class PmsMasterService {
     }
 
     @Transactional
-    public PmsCompetencyResponse createCompetency(UUID organisationId, PmsCompetencyRequest request) {
+    public PmsCompetencyResponse createCompetency(String organisationId, PmsCompetencyRequest request) {
         log.info("Creating competency for organisation {}", organisationId);
         String name = request.name().trim();
         if (competencyRepository.existsByOrganisationIdAndNameIgnoreCaseAndIsActiveTrue(organisationId, name)) {
@@ -199,7 +199,7 @@ public class PmsMasterService {
     }
 
     @Transactional
-    public PmsCompetencyResponse updateCompetency(UUID organisationId, UUID competencyId,
+    public PmsCompetencyResponse updateCompetency(String organisationId, UUID competencyId,
                                                   PmsCompetencyRequest request) {
         log.info("Updating competency {}", competencyId);
         PmsCompetencyMasterEntity competency = findCompetency(organisationId, competencyId);
@@ -216,7 +216,7 @@ public class PmsMasterService {
     }
 
     @Transactional
-    public void deleteCompetency(UUID organisationId, UUID competencyId) {
+    public void deleteCompetency(String organisationId, UUID competencyId) {
         log.info("Deleting competency {}", competencyId);
         PmsCompetencyMasterEntity competency = findCompetency(organisationId, competencyId);
         if (templateCompetencyRepository.existsByCompetencyId(competencyId)) {
@@ -229,27 +229,27 @@ public class PmsMasterService {
 
     // ── internals ────────────────────────────────────────────────────────────
 
-    private PmsKraMasterEntity findKra(UUID organisationId, UUID kraId) {
+    private PmsKraMasterEntity findKra(String organisationId, UUID kraId) {
         return kraRepository.findByIdAndOrganisationId(kraId, organisationId)
                 .filter(k -> Boolean.TRUE.equals(k.getIsActive()))
                 .orElseThrow(() -> DomainException.notFound("KRA not found", "PMS_KRA_NOT_FOUND"));
     }
 
     /** The parent KRA named in a KPI payload must be an active KRA of the caller's organisation. */
-    private PmsKraMasterEntity findKraForKpi(UUID organisationId, UUID kraId) {
+    private PmsKraMasterEntity findKraForKpi(String organisationId, UUID kraId) {
         return kraRepository.findByIdAndOrganisationId(kraId, organisationId)
                 .filter(k -> Boolean.TRUE.equals(k.getIsActive()))
                 .orElseThrow(() -> DomainException.unprocessable("kra_id does not refer to an existing KRA",
                         "PMS_KRA_NOT_FOUND"));
     }
 
-    private PmsKpiMasterEntity findKpi(UUID organisationId, UUID kpiId) {
+    private PmsKpiMasterEntity findKpi(String organisationId, UUID kpiId) {
         return kpiRepository.findByIdAndOrganisationId(kpiId, organisationId)
                 .filter(k -> Boolean.TRUE.equals(k.getIsActive()))
                 .orElseThrow(() -> DomainException.notFound("KPI not found", "PMS_KPI_NOT_FOUND"));
     }
 
-    private PmsCompetencyMasterEntity findCompetency(UUID organisationId, UUID competencyId) {
+    private PmsCompetencyMasterEntity findCompetency(String organisationId, UUID competencyId) {
         return competencyRepository.findByIdAndOrganisationId(competencyId, organisationId)
                 .filter(c -> Boolean.TRUE.equals(c.getIsActive()))
                 .orElseThrow(() -> DomainException.notFound("Competency not found", "PMS_COMPETENCY_NOT_FOUND"));

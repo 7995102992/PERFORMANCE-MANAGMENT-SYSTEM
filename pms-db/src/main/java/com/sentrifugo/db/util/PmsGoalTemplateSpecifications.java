@@ -11,8 +11,8 @@ public final class PmsGoalTemplateSpecifications {
     private PmsGoalTemplateSpecifications() {
     }
 
-    public static Specification<PmsGoalTemplateEntity> matching(UUID organisationId, String financialYear,
-                                                                UUID departmentId, UUID plantId, String search) {
+    public static Specification<PmsGoalTemplateEntity> matching(String organisationId, String financialYear,
+                                                                String departmentId, String plantId, String search) {
         Specification<PmsGoalTemplateEntity> spec = (root, query, cb) -> cb.and(
                 cb.equal(root.get("organisationId"), organisationId), cb.isTrue(root.get("isActive")));
         if (financialYear != null && !financialYear.isBlank()) {

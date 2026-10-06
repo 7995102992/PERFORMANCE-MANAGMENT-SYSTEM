@@ -144,8 +144,8 @@ class PmsApiTest {
         assertThat(code(call("POST", "/pms-master/create/kra", "reader-a", "{\"name\": \"x\"}"), 403))
                 .isEqualTo("FORBIDDEN");
         assertThat(call("GET", "/pms-master/get/kras", "reader-a", null).statusCode()).isEqualTo(200);
-        assertThat(code(call("GET", "/pms-cycle/get/cycles", "mongo-org", null), 403))
-                .isEqualTo("PMS_INVALID_ORGANISATION");
+        // IAM ids are 24-character MongoDB ObjectIds, not UUIDs; they must scope correctly.
+        assertThat(call("GET", "/pms-cycle/get/cycles", "mongo-org", null).statusCode()).isEqualTo(200);
     }
 
     // ── 2.10 / 1.5 rating scale ──────────────────────────────────────────────

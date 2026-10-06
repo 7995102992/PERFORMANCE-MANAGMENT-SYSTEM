@@ -20,10 +20,10 @@ import java.util.UUID;
 public abstract class BaseDTO implements Serializable {
 
     @JsonIgnore
-    private UUID createdBy;
+    private String createdBy;
 
     @JsonIgnore
-    private UUID modifiedBy;
+    private String modifiedBy;
 
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private LocalDateTime createdDate;
