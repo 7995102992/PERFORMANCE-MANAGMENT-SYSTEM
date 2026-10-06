@@ -9,6 +9,10 @@ import type { TemplateFormValues } from "../template.types";
 import { distributeEqually, sumWeights, WEIGHT_EPSILON } from "../template.utils";
 import { WeightInput } from "./WeightInput";
 
+/**
+ * Goal template step 3 (screen 2.4): pick the competencies for the template and their weightages. The
+ * selection may be empty; when it has rows, the weightages must total 100.
+ */
 export function TemplateCompetencyStep() {
   const {
     control,

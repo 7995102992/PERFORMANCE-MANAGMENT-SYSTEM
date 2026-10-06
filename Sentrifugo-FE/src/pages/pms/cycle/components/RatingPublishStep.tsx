@@ -34,6 +34,10 @@ const levelTone = (value: number, max: number) => {
   return "bg-red-500/10 text-red-600";
 };
 
+/**
+ * Wizard step 4: pick the rating scale, choose which recipients are notified on publish (NOTIFY_FIELDS),
+ * and review the cycle before publishing. levelTone colours each rating level by its position on the scale.
+ */
 export function RatingPublishStep() {
   const {
     control,

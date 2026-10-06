@@ -14,6 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import CopyTemplateDialog from "./CopyTemplateDialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,6 +63,7 @@ const GoalTemplateList = () => {
   const [plant, setPlant] = useState(ALL);
   const [department, setDepartment] = useState(ALL);
   const [search, setSearch] = useState("");
+  const [copyOpen, setCopyOpen] = useState(false);
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const params = useMemo(
@@ -146,12 +148,17 @@ const GoalTemplateList = () => {
                 ))}
               </SelectContent>
             </Select>
+            <Button size="lg" variant="outline" onClick={() => setCopyOpen(true)}>
+              Copy Template
+            </Button>
             <Button size="lg" onClick={create}>
               <Plus /> Create Template
             </Button>
           </div>
         }
       />
+
+      <CopyTemplateDialog open={copyOpen} onOpenChange={setCopyOpen} />
 
       <PmsTableCard>
         <div className="mb-5 flex flex-wrap items-end gap-3">

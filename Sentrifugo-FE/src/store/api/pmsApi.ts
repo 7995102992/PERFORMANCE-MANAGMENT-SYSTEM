@@ -2,8 +2,12 @@ import { createApi } from '@reduxjs/toolkit/query/react'
 import type { FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { createBaseQuery } from './baseQuery'
 import { mockEligibilityPreview, mockLatency, MOCK_DEPARTMENTS, MOCK_PLANTS } from './mocks/pmsCycleMock'
+/*
+ * RTK Query endpoints for the PMS module. Every call goes through createBaseQuery to /api/v1/pms and
+ * unwraps the { success, message, data } envelope. Endpoints still backed by mocks are listed in
+ * docs/PMS-FRONTEND.md, section 5.
+ */
 import {
-  mockDeleteTemplate,
   mockDuplicateTemplate,
   mockListDesignations,
   mockSetTemplateStatus,
@@ -20,6 +24,8 @@ import type {
   PmsRatingScale,
 } from '@/types/pms'
 import type {
+  PmsCopyPreview,
+  PmsCopyResult,
   PmsApprovalItem,
   PmsEmployeeTargets,
   PmsTargetValidation,
@@ -370,6 +376,18 @@ export const pmsApi = createApi({
       invalidatesTags: (_r, _e, body) => [{ type: 'PmsTemplate', id: 'TEAM' }, { type: 'PmsTemplate', id: `TARGETS-${body.employee_user_id}` }],
     }),
     // -- Employee goals and HOD approval (4.1 - 4.3, 5.1 - 5.2) --
+    getPmsCopyPreview: builder.query<PmsCopyPreview, { previousYear: string; targetYear: string }>({
+      query: ({ previousYear, targetYear }) => ({
+        url: '/pms-goal-template/get/copy-preview',
+        params: { previous_year: previousYear, target_year: targetYear },
+      }),
+      transformResponse: (r: ApiEnvelope<PmsCopyPreview>) => r.data,
+    }),
+    copyPmsTemplates: builder.mutation<PmsCopyResult, { previous_year: string; target_year: string }>({
+      query: (body) => ({ url: '/pms-goal-template/copy', method: 'POST', body }),
+      transformResponse: (r: ApiEnvelope<PmsCopyResult>) => r.data,
+      invalidatesTags: [{ type: 'PmsTemplate', id: 'LIST' }],
+    }),
     getPmsMyGoals: builder.query<PmsEmployeeTargets, string>({
       query: (financialYear) => ({
         url: '/pms-goal-assignment/get/my-goals',
@@ -503,7 +521,8 @@ export const pmsApi = createApi({
       invalidatesTags: [{ type: 'PmsTemplate', id: 'LIST' }],
     }),
     deletePmsTemplate: builder.mutation<void, string>({
-      queryFn: (id) => mock(() => mockDeleteTemplate(id)),
+      query: (id) => ({ url: `/pms-goal-template/delete/goal-template/${id}`, method: 'DELETE' }),
+      transformResponse: () => undefined,
       invalidatesTags: [{ type: 'PmsTemplate', id: 'LIST' }],
     }),
     getPmsDesignations: builder.query<PmsDesignationOption[], string | void>({
@@ -576,6 +595,8 @@ export const {
   useSaveEmployeeTargetsMutation,
   useValidateEmployeeTargetsMutation,
   useSendEmployeeTargetsMutation,
+  useGetPmsCopyPreviewQuery,
+  useCopyPmsTemplatesMutation,
   useGetPmsMyGoalsQuery,
   useAcknowledgeMyGoalsMutation,
   useRequestGoalChangeMutation,

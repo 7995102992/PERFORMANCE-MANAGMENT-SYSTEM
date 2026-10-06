@@ -10,6 +10,10 @@ const DAY = 86_400_000;
 
 const time = (iso: string) => isoToDate(iso)?.getTime();
 
+/**
+ * Wizard step 2: start and end dates for each stage. Dates are suggested from the performance period
+ * (see buildDefaultStages); the user can change them.
+ */
 export function TimelineStep() {
   const {
     control,

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -21,6 +20,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { PageLoader } from "@/components/shared/PageLoader";
 import { useNavigationGuard } from "@/hooks/use-navigation-guard";
 import { useConfirm } from "@/providers/confirm-dialog-provider";
+import AddRatingScaleDialog from "./AddRatingScaleDialog";
 import { toast } from "@/lib/toast";
 import {
   useCreatePmsRatingScaleMutation,
@@ -81,7 +81,6 @@ const STANDARD_LEVELS: PmsRatingScaleUpdate["levels"] = [
 /** Screen 2.10 — Rating Scale. */
 const RatingScale = () => {
   const confirm = useConfirm();
-  const navigate = useNavigate();
   const { data: scales = [], isLoading } = useGetPmsRatingScaleConfigsQuery();
   const [update, { isLoading: saving }] = useUpdatePmsRatingScaleMutation();
   const [createScale, { isLoading: creatingNow }] = useCreatePmsRatingScaleMutation();
@@ -120,7 +119,8 @@ const RatingScale = () => {
   }, [scale, reset, creating]);
 
   // Creating a scale has its own screen: pick the standards, then set the score ranges.
-  const startCreate = () => navigate({ to: "/pms/configuration/rating-scale/new" });
+  const [addOpen, setAddOpen] = useState(false);
+  const startCreate = () => setAddOpen(true);
 
   const onSubmit = async (body: PmsRatingScaleUpdate) => {
     if (creating) {
@@ -160,6 +160,7 @@ const RatingScale = () => {
   if (!scale && !creating) {
     return (
       <div className="space-y-6 p-6">
+        <AddRatingScaleDialog open={addOpen} onOpenChange={setAddOpen} onCreated={setPickedId} />
         <PageHeader
           title="Rating Scale"
           subtitle="Define rating levels, labels and score ranges used in appraisals"
@@ -179,6 +180,7 @@ const RatingScale = () => {
 
   return (
     <div className="space-y-6 p-6">
+      <AddRatingScaleDialog open={addOpen} onOpenChange={setAddOpen} onCreated={setPickedId} />
       <PageHeader
         title="Rating Scale"
         subtitle="Define rating levels, labels and score ranges used in appraisals"
@@ -193,6 +195,32 @@ const RatingScale = () => {
       />
 
       <PmsTableCard>
+        <div className="mb-6 overflow-x-auto rounded-md border">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
+              <tr>
+                <th className="px-4 py-2.5 text-left">Scale name</th>
+                <th className="px-4 py-2.5 text-left">Levels</th>
+                <th className="px-4 py-2.5 text-left">Default</th>
+                <th className="px-4 py-2.5 text-left">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {scales.map((s) => (
+                <tr
+                  key={s.id}
+                  className={`cursor-pointer border-t hover:bg-muted/30 ${s.id === scale.id ? "bg-primary/5" : ""}`}
+                  onClick={() => setPickedId(s.id)}
+                >
+                  <td className="px-4 py-2.5 font-medium text-foreground">{s.name}</td>
+                  <td className="px-4 py-2.5">{s.levels.length}</td>
+                  <td className="px-4 py-2.5">{s.is_default ? "Yes" : "—"}</td>
+                  <td className="px-4 py-2.5">{s.status === "inactive" ? "Inactive" : "Active"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
           <FormProvider {...form}>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">

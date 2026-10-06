@@ -17,6 +17,10 @@ import { dateToIso, financialYearLabel, isoToDate } from "../../../shared/pms.ut
 import { financialYearOptions } from "../../config.constants";
 import type { TemplateFormValues } from "../template.types";
 
+/**
+ * Goal template step 1 (screen 2.2): name, financial year, department, role / designation, plant,
+ * effective date and status. Designations are loaded for the chosen department.
+ */
 export function TemplateBasicStep() {
   const {
     register,

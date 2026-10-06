@@ -223,6 +223,7 @@ export const ratingScaleOptionFromApi = (s: ApiRatingScale): PmsRatingScale => (
 export const ratingScaleConfigFromApi = (s: ApiRatingScale): PmsRatingScaleConfig => ({
   id: s.id,
   name: s.name,
+  status: s.status,
   is_default: s.is_default,
   show_definitions_to_employees: s.show_definitions_to_employees,
   levels: s.levels.map((l) => ({

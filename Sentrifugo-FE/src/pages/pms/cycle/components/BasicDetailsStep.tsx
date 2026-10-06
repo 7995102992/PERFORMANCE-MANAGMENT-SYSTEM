@@ -14,6 +14,7 @@ import { APPRAISAL_TYPE_OPTIONS } from "../cycle.constants";
 import { dateToIso, isoToDate } from "../../shared/pms.utils";
 import { FormRow, StepSection } from "../../shared/FormRow";
 
+/** Wizard step 1: cycle name, appraisal type, performance period and description. */
 export function BasicDetailsStep() {
   const {
     register,

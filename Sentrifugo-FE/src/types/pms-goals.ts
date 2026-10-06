@@ -56,6 +56,16 @@ export interface PmsTargetValidation {
   errors: string[]
 }
 
+export interface PmsCopyPreview {
+  found: number
+  already_in_target: number
+}
+
+export interface PmsCopyResult {
+  copied: number
+  skipped: number
+}
+
 /** One row of the HOD approval queue (5.1). */
 export interface PmsApprovalItem {
   employee_user_id: string

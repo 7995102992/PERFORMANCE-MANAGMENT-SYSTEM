@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import type { PmsCycleStatus } from "@/types/pms";
 import { CYCLE_STATUS_META } from "../cycle.constants";
 
+/** Coloured status chip with an icon. Labels, icons and colours come from CYCLE_STATUS_META. */
 export function CycleStatusBadge({
   status,
   className,

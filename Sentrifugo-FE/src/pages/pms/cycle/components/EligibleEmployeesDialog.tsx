@@ -47,7 +47,7 @@ export function EligibleEmployeesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-w-5xl">
         <DialogHeader>
           <DialogTitle>Eligible Employees Preview</DialogTitle>
           <DialogDescription>
@@ -65,7 +65,7 @@ export function EligibleEmployeesDialog({
           </p>
         ) : (
           <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3 rounded-xl bg-primary/10 px-4 py-2.5">
                 <Users className="size-5 text-primary" />
                 <div>
@@ -76,7 +76,7 @@ export function EligibleEmployeesDialog({
                 </div>
               </div>
               {excluded.length > 0 && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="ml-auto flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                   <UserX className="size-4" />
                   Excluded:
                   {excluded.map(([label, n]) => (
@@ -88,7 +88,7 @@ export function EligibleEmployeesDialog({
               )}
             </div>
 
-            <div className="max-h-[22rem] overflow-auto rounded-lg border">
+            <div className="max-h-[28rem] overflow-auto rounded-lg border">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-table-header text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   <tr>

@@ -4,7 +4,6 @@ import { FormProvider, useForm, useWatch, type Resolver } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRight, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/shared/PageHeader";
 import { PageLoader } from "@/components/shared/PageLoader";
 import { RecordNotFound } from "@/components/shared/RecordNotFound";
 import { useNavigationGuard } from "@/hooks/use-navigation-guard";
@@ -32,13 +31,6 @@ import {
 import { STEP_SCHEMAS } from "./cycle.schema";
 
 const LAST_STEP = WIZARD_STEPS.length - 1;
-
-const STEP_HEADERS = [
-  { title: "Create New Appraisal – Basic Details", subtitle: "Cycle name, type and performance period" },
-  { title: "Configure Timeline & Milestones", subtitle: "Start and end dates for each stage" },
-  { title: "Applicability & Eligibility", subtitle: "Who is covered by this cycle" },
-  { title: "Rating Scale & Publish", subtitle: "Rating scale, notifications and publish" },
-];
 
 const ALL_STEPS_DONE = new Set(WIZARD_STEPS.map((s) => s.id));
 
@@ -195,11 +187,6 @@ const InitiateAppraisal = ({ readOnly = false }: InitiateAppraisalProps) => {
     );
   }
 
-  const header = STEP_HEADERS[step];
-  const title =
-    step === 0 && cycleId
-      ? `${readOnly ? "Appraisal Cycle" : "Edit Appraisal"} – Basic Details`
-      : header.title;
   const editingLive = existing?.status === "active" && !readOnly;
   const finishLabel = readOnly
     ? "Back to PMS Cycle"
@@ -208,27 +195,20 @@ const InitiateAppraisal = ({ readOnly = false }: InitiateAppraisalProps) => {
       : "Publish Cycle";
 
   return (
-    <div className="space-y-6 p-6">
-      <PageHeader
-        title={title}
-        subtitle={`Step ${step + 1} of ${WIZARD_STEPS.length} · ${header.subtitle}`}
-        meta={
-          readOnly && existing ? (
-            <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-              {existing.cycle_code} · View only
-            </span>
-          ) : undefined
-        }
-      />
-
+    <div className="p-6">
       <div className="rounded-xl border bg-card">
-        <div className="border-b px-6 py-5 sm:px-10">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b px-6 py-5 sm:px-10">
           <WizardStepper
             steps={WIZARD_STEPS}
             current={step}
             completed={completed}
             onStepClick={goToStep}
           />
+          {readOnly && existing && (
+            <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+              {existing.cycle_code} · View only
+            </span>
+          )}
         </div>
 
         <FormProvider {...form}>

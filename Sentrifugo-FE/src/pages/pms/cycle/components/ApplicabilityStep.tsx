@@ -19,11 +19,17 @@ import { dateToIso, isoToDate } from "../../shared/pms.utils";
 import { EligibleEmployeesDialog } from "./EligibleEmployeesDialog";
 import { FormRow, StepSection } from "../../shared/FormRow";
 
+/**
+ * Wizard step 3: which plants and departments (All or Select), employment types, minimum service and
+ * the date service is measured on, plus the two exclusion switches. "Show Eligible Employees Preview"
+ * opens EligibleEmployeesDialog with the current rules.
+ */
 export function ApplicabilityStep() {
   const {
     register,
     control,
     watch,
+    setValue,
     formState: { errors },
   } = useFormContext<PmsCycleUpsert>();
   const e = errors.applicability;
@@ -33,6 +39,8 @@ export function ApplicabilityStep() {
   const { data: departments = [] } = useGetPmsDepartmentsQuery();
 
   const allDepartments = watch("applicability.all_departments");
+  const plantIds = watch("applicability.plant_ids");
+  const allPlants = plants.length > 0 && plantIds.length === plants.length;
 
   return (
     <section>
@@ -42,20 +50,42 @@ export function ApplicabilityStep() {
       />
       <div className="space-y-4">
         <FormRow label="Applicable Plants" required error={e?.plant_ids?.message}>
-          <Controller
-            control={control}
-            name="applicability.plant_ids"
-            render={({ field }) => (
-              <SearchableSelect
-                multi
-                loading={plantsLoading}
-                options={plants.map((p) => ({ label: p.name, value: p.id }))}
-                value={field.value}
-                onChange={(v) => field.onChange(v as string[])}
-                placeholder="Select plants"
+          <div className="space-y-3">
+            <RadioGroup
+              className="flex gap-5"
+              value={allPlants ? "all" : "select"}
+              onValueChange={(v) =>
+                setValue(
+                  "applicability.plant_ids",
+                  v === "all" ? plants.map((p) => p.id) : [],
+                  { shouldValidate: true, shouldDirty: true },
+                )
+              }
+            >
+              <Label className="flex cursor-pointer items-center gap-2 font-normal">
+                <RadioGroupItem value="all" /> All Plants
+              </Label>
+              <Label className="flex cursor-pointer items-center gap-2 font-normal">
+                <RadioGroupItem value="select" /> Select Plants
+              </Label>
+            </RadioGroup>
+            {!allPlants && (
+              <Controller
+                control={control}
+                name="applicability.plant_ids"
+                render={({ field }) => (
+                  <SearchableSelect
+                    multi
+                    loading={plantsLoading}
+                    options={plants.map((p) => ({ label: p.name, value: p.id }))}
+                    value={field.value}
+                    onChange={(v) => field.onChange(v as string[])}
+                    placeholder="Select plants"
+                  />
+                )}
               />
             )}
-          />
+          </div>
         </FormRow>
 
         <FormRow label="Departments" error={e?.department_ids?.message}>

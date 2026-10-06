@@ -75,6 +75,7 @@ export interface PmsRatingLevelConfig {
 export interface PmsRatingScaleConfig {
   id: string
   name: string
+  status?: 'active' | 'inactive'
   /** Highest rating first. */
   levels: PmsRatingLevelConfig[]
   is_default: boolean

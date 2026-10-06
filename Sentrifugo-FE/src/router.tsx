@@ -136,7 +136,6 @@ import KraMaster from "./pages/pms/configuration/kra-master/KraMaster";
 import KpiMaster from "./pages/pms/configuration/kpi-master/KpiMaster";
 import CompetencyMaster from "./pages/pms/configuration/competency-master/CompetencyMaster";
 import RatingScale from "./pages/pms/configuration/rating-scale/RatingScale";
-import CreateRatingScale from "./pages/pms/configuration/rating-scale/CreateRatingScale";
 import TeamGoalSettingPage from "./pages/pms/goal-setting/TeamGoalSettingPage";
 import TargetAssignmentPage from "./pages/pms/goal-setting/TargetAssignmentPage";
 import MyGoalsPage from "./pages/pms/goal-setting/MyGoalsPage";
@@ -847,7 +846,6 @@ const pmsKraMasterRoute = pmsRoute("/pms/configuration/kra-master", () => <KraMa
 const pmsKpiMasterRoute = pmsRoute("/pms/configuration/kpi-master", () => <KpiMaster />);
 const pmsCompetencyMasterRoute = pmsRoute("/pms/configuration/competency-master", () => <CompetencyMaster />);
 const pmsRatingScaleRoute = pmsRoute("/pms/configuration/rating-scale", () => <RatingScale />);
-const pmsCreateRatingScaleRoute = pmsRoute("/pms/configuration/rating-scale/new", () => <CreateRatingScale />);
 
 // Manager goal setting (3.1 - 3.5). The financial year is in the path, e.g. /pms/team-goal-setting/2026.
 const pmsTeamGoalSettingRoute = pmsRoute("/pms/team-goal-setting/$fy", () => <TeamGoalSettingPage />);
@@ -1163,7 +1161,6 @@ const routeTree = rootRoute.addChildren([
     pmsKpiMasterRoute,
     pmsCompetencyMasterRoute,
     pmsRatingScaleRoute,
-    pmsCreateRatingScaleRoute,
     pmsTeamGoalSettingRoute,
     pmsMyGoalsRoute,
     pmsGoalApprovalsRoute,

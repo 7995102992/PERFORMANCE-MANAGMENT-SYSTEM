@@ -17,6 +17,11 @@ import type { TemplateFormValues } from "../template.types";
 import { sumWeights, WEIGHT_EPSILON } from "../template.utils";
 import { WeightInput } from "./WeightInput";
 
+/**
+ * Goal template step 2 (screen 2.3): choose KRAs, then KPIs under each KRA, with a weightage and target
+ * type per KPI. The KPI weightages must total 100 before the template can be saved as active; a draft
+ * may be saved with any total.
+ */
 export function TemplateKraKpiStep() {
   const {
     control,

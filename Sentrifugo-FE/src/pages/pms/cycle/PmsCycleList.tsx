@@ -61,6 +61,10 @@ import {
   formatMonthYear,
 } from "../shared/pms.utils";
 
+/**
+ * PMS cycle list: stat cards that double as status filters, a search box and filters, the cycle table
+ * with per-row actions, pagination, and export. Opens the wizard to create, edit or view a cycle.
+ */
 const ALL = "all";
 
 const HEADERS = [
