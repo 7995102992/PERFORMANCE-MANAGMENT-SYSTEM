@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -21,6 +23,7 @@ import { useNavigationGuard } from "@/hooks/use-navigation-guard";
 import { useConfirm } from "@/providers/confirm-dialog-provider";
 import { toast } from "@/lib/toast";
 import {
+  useCreatePmsRatingScaleMutation,
   useGetPmsRatingScaleConfigsQuery,
   useUpdatePmsRatingScaleMutation,
 } from "@/store/api/pmsApi";
@@ -66,12 +69,27 @@ const schema = z.object({
 
 const fmt = (n: number) => (Number.isFinite(n) ? n.toFixed(2) : "");
 
+/** Starting levels for a new scale: the standard five-point design. */
+const STANDARD_LEVELS: PmsRatingScaleUpdate["levels"] = [
+  { rating: 5, label: "Outstanding", definition: "Exceptional performance, consistently exceeds expectations", score_min: 4.5, score_max: 5, color: "#16A34A" },
+  { rating: 4, label: "Exceeds Expectations", definition: "Consistently above expectations", score_min: 3.5, score_max: 4.49, color: "#2563EB" },
+  { rating: 3, label: "Meets Expectations", definition: "Fully meets expectations", score_min: 2.5, score_max: 3.49, color: "#6366F1" },
+  { rating: 2, label: "Needs Improvement", definition: "Partially meets expectations", score_min: 1.5, score_max: 2.49, color: "#D97706" },
+  { rating: 1, label: "Unsatisfactory", definition: "Does not meet expectations", score_min: 1, score_max: 1.49, color: "#DC2626" },
+];
+
 /** Screen 2.10 — Rating Scale. */
 const RatingScale = () => {
   const confirm = useConfirm();
+  const navigate = useNavigate();
   const { data: scales = [], isLoading } = useGetPmsRatingScaleConfigsQuery();
   const [update, { isLoading: saving }] = useUpdatePmsRatingScaleMutation();
+  const [createScale, { isLoading: creatingNow }] = useCreatePmsRatingScaleMutation();
   const [pickedId, setPickedId] = useState<string>("");
+  // Create mode: a blank scale with a name, using the standard levels as a start.
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const busy = saving || creatingNow;
 
   // The default scale opens first; the user can switch below.
   const scale = scales.find((s) => s.id === pickedId) ?? scales.find((s) => s.is_default) ?? scales[0];
@@ -92,16 +110,35 @@ const RatingScale = () => {
   const releaseGuard = useNavigationGuard(isDirty);
 
   useEffect(() => {
-    if (scale) {
+    if (scale && !creating) {
       reset({
         levels: scale.levels,
         is_default: scale.is_default,
         show_definitions_to_employees: scale.show_definitions_to_employees,
       });
     }
-  }, [scale, reset]);
+  }, [scale, reset, creating]);
+
+  // Creating a scale has its own screen: pick the standards, then set the score ranges.
+  const startCreate = () => navigate({ to: "/pms/configuration/rating-scale/new" });
 
   const onSubmit = async (body: PmsRatingScaleUpdate) => {
+    if (creating) {
+      if (!newName.trim()) {
+        toast.error("Give the rating scale a name");
+        return;
+      }
+      try {
+        const saved = await createScale({ name: newName.trim(), body }).unwrap();
+        releaseGuard();
+        setCreating(false);
+        setPickedId(saved.id);
+        toast.success("Rating scale created");
+      } catch (e) {
+        toast.error(e, "Could not create the rating scale");
+      }
+      return;
+    }
     if (!scale) return;
     try {
       const saved = await update({ id: scale.id, body }).unwrap();
@@ -117,13 +154,42 @@ const RatingScale = () => {
     }
   };
 
-  if (isLoading || !scale) return <PageLoader message="Loading rating scale…" />;
+  if (isLoading) return <PageLoader message="Loading rating scale…" />;
+
+  // No scales yet: offer the first one instead of loading forever.
+  if (!scale && !creating) {
+    return (
+      <div className="space-y-6 p-6">
+        <PageHeader
+          title="Rating Scale"
+          subtitle="Define rating levels, labels and score ranges used in appraisals"
+          action={
+            <Button type="button" onClick={startCreate}>
+              <Plus className="mr-2 size-4" />
+              Create Rating Scale
+            </Button>
+          }
+        />
+        <p className="text-sm text-muted-foreground">
+          No rating scale exists for this organisation yet. Create one before publishing an appraisal cycle.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6">
       <PageHeader
         title="Rating Scale"
         subtitle="Define rating levels, labels and score ranges used in appraisals"
+        action={
+          !creating ? (
+            <Button type="button" onClick={startCreate}>
+              <Plus className="mr-2 size-4" />
+              Create Rating Scale
+            </Button>
+          ) : undefined
+        }
       />
 
       <PmsTableCard>
@@ -131,11 +197,20 @@ const RatingScale = () => {
           <FormProvider {...form}>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <h2 className="text-base font-semibold text-foreground">
-                {scale.name} – Rating Levels
+                {creating ? "New rating scale" : scale?.name} – Rating Levels
               </h2>
-              {scales.length > 1 && (
+              {creating && (
+                <Input
+                  aria-label="Scale name"
+                  className="w-64"
+                  placeholder="e.g. Engineering 4-Point Scale"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                />
+              )}
+              {scales.length > 1 && !creating && (
                 <Select
-                  value={scale.id}
+                  value={scale?.id ?? ""}
                   onValueChange={(v) =>
                     isDirty
                       ? confirm({
@@ -281,19 +356,23 @@ const RatingScale = () => {
               <Button
                 type="button"
                 variant="outline"
-                disabled={!isDirty || saving}
-                onClick={() =>
-                  reset({
-                    levels: scale.levels,
-                    is_default: scale.is_default,
-                    show_definitions_to_employees: scale.show_definitions_to_employees,
-                  })
-                }
+                disabled={(!creating && !isDirty) || busy}
+                onClick={() => {
+                  if (creating) {
+                    setCreating(false);
+                  } else if (scale) {
+                    reset({
+                      levels: scale.levels,
+                      is_default: scale.is_default,
+                      show_definitions_to_employees: scale.show_definitions_to_employees,
+                    });
+                  }
+                }}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? "Saving…" : "Save Scale"}
+              <Button type="submit" disabled={busy}>
+                {busy ? "Saving…" : creating ? "Create Scale" : "Save Scale"}
               </Button>
             </div>
           </FormProvider>

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { FormProvider, useForm, useWatch, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ArrowRight, Rocket, Save } from "lucide-react";
+import { ArrowLeft, ArrowRight, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageLoader } from "@/components/shared/PageLoader";
@@ -157,25 +157,6 @@ const InitiateAppraisal = ({ readOnly = false }: InitiateAppraisalProps) => {
     return created.id;
   };
 
-  const handleSaveDraft = async () => {
-    const previous = stepRef.current;
-    stepRef.current = 0;
-    const basicOk = await trigger("basic", { shouldFocus: true });
-    stepRef.current = previous;
-    if (!basicOk) {
-      goToStep(0);
-      toast.error("Complete the basic details to save a draft");
-      return;
-    }
-    try {
-      await persist(getValues());
-      toast.success("Draft saved");
-      goToList();
-    } catch (e) {
-      toast.error(e, "Could not save the draft");
-    }
-  };
-
   const handleFinish = async () => {
     if (readOnly) {
       goToList();
@@ -277,11 +258,6 @@ const InitiateAppraisal = ({ readOnly = false }: InitiateAppraisalProps) => {
           )}
 
           <div className="flex items-center gap-2">
-            {!readOnly && !editingLive && (
-              <Button variant="ghost" onClick={handleSaveDraft} disabled={busy}>
-                <Save /> Save as Draft
-              </Button>
-            )}
             {step < LAST_STEP ? (
               <Button onClick={handleNext} disabled={busy}>
                 Next <ArrowRight />

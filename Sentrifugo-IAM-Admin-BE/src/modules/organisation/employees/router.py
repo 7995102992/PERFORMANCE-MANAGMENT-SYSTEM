@@ -158,7 +158,9 @@ async def list_employees(
     limit: int = Query(default=20, ge=1, le=1000),
     search: str = Query(default=""),
     has_policies: Optional[bool] = Query(default=None),
+    l1_manager_id: str | None = Query(default=None, description="User id of the L1 manager; returns their direct reports"),
 ):
+    l1_id = PydanticObjectId(l1_manager_id) if l1_manager_id else None
     bu_ids = [PydanticObjectId(bid.strip()) for bid in business_unit_ids.split(",") if bid.strip()] if business_unit_ids else None
     dept_ids = [PydanticObjectId(did.strip()) for did in department_ids.split(",") if did.strip()] if department_ids else None
     desg_ids = [PydanticObjectId(did.strip()) for did in designation_ids.split(",") if did.strip()] if designation_ids else None
@@ -176,6 +178,7 @@ async def list_employees(
         search=search,
         has_policies=has_policies,
         role_ids=rl_ids,
+        l1_manager_id=l1_id,
     )
 
 

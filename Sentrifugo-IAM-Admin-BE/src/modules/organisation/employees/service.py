@@ -181,6 +181,7 @@ async def list_employees(
     search: str = "",
     has_policies: Optional[bool] = None,
     role_ids: Optional[list[PydanticObjectId]] = None,
+    l1_manager_id: Optional[PydanticObjectId] = None,
 ) -> list[dict]:
     org_id = _resolve_org(caller)
     return await _tools.get_all(
@@ -196,6 +197,7 @@ async def list_employees(
         search=search,
         has_policies=has_policies,
         role_ids=role_ids,
+        l1_manager_id=l1_manager_id,
     )
 
 

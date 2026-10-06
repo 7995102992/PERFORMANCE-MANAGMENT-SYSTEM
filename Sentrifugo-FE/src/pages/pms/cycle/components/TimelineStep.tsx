@@ -28,7 +28,6 @@ export function TimelineStep() {
     <section>
       <StepSection
         title="Timeline Configuration"
-        description="Start and end dates for each stage. Reminders go out when a stage opens and before it closes."
       />
 
       <div className="overflow-x-auto rounded-lg border">
@@ -38,7 +37,6 @@ export function TimelineStep() {
               <th className="px-4 py-2.5">Stage</th>
               <th className="px-3 py-2.5">Start Date</th>
               <th className="px-3 py-2.5">End Date</th>
-              <th className="hidden px-3 py-2.5 lg:table-cell">Overview</th>
               <th className="px-4 py-2.5 text-center">Notification</th>
             </tr>
           </thead>
@@ -84,14 +82,6 @@ export function TimelineStep() {
                         {rowError.end_date?.message ?? rowError.start_date?.message}
                       </p>
                     )}
-                  </td>
-                  <td className="hidden w-full px-3 py-2.5 lg:table-cell">
-                    <div className="relative h-2 rounded-full bg-muted">
-                      <div
-                        className="absolute inset-y-0 rounded-full bg-primary/60"
-                        style={{ left: `${left}%`, width: `${width}%` }}
-                      />
-                    </div>
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex justify-center">

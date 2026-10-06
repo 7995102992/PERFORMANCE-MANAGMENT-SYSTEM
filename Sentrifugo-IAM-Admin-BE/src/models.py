@@ -214,6 +214,31 @@ class PermissionCodeEnum(StrEnum):
     MANAGER_ATTENDANCE = "manager_attendance"
     HR_ATTENDANCE = "hr_attendance"
 
+    # Performance Management feature permissions — one per PMS screen group.
+    # Owner roles: Corporate HR, Manager, Employee, HOD, HR Governance.
+    PMS_MANAGE_CYCLES = "manage_pms_cycles"
+    PMS_MANAGE_GOAL_TEMPLATES = "manage_goal_templates"
+    PMS_MANAGE_MASTERS = "manage_pms_masters"
+    PMS_MANAGE_RATING_SCALE = "manage_rating_scale"
+    PMS_VIEW_APPRAISAL_HISTORY = "view_appraisal_history"
+    PMS_MANAGE_TEAM_GOALS = "manage_team_goals"
+    PMS_VIEW_TEAM_PROGRESS = "view_team_progress"
+    PMS_MANAGE_MID_YEAR_REVIEW = "manage_mid_year_review"
+    PMS_MANAGE_TEAM_APPRAISAL = "manage_team_appraisal"
+    PMS_MANAGE_OWN_GOALS = "manage_own_goals"
+    PMS_UPDATE_OWN_PROGRESS = "update_own_progress"
+    PMS_MANAGE_SELF_APPRAISAL = "manage_self_appraisal"
+    PMS_VIEW_OWN_FINAL_RATING = "view_own_final_rating"
+    PMS_MANAGE_HOD_GOAL_SETTINGS = "manage_hod_goal_settings"
+    PMS_REVIEW_EMPLOYEE_SCORECARD = "review_employee_scorecard"
+    PMS_VIEW_TARGET_REVISIONS = "view_target_revisions"
+    PMS_APPROVE_TARGET_REVISIONS = "approve_target_revisions"
+    PMS_REVIEW_ASSESSMENT = "review_assessment"
+    PMS_MANAGE_HOD_RATING = "manage_hod_rating"
+    PMS_REVIEW_APPRAISAL = "review_appraisal"
+    PMS_MANAGE_RATING_NORMALIZATION = "manage_rating_normalization"
+    PMS_VIEW_PLANTWISE_APPRAISAL_HISTORY = "view_plantwise_appraisal_history"
+
 
 _GENERIC_CRUD: set[PermissionCodeEnum] = {
     PermissionCodeEnum.CREATE,
@@ -254,7 +279,31 @@ MODULE_PERMISSIONS: dict[ModuleEnum, set[PermissionCodeEnum]] = {
         PermissionCodeEnum.HR_ATTENDANCE,
     },
     ModuleEnum.PAYROLL: {PermissionCodeEnum.CREATE_RESOURCE},
-    ModuleEnum.PERFORMANCE_MANAGEMENT: {PermissionCodeEnum.CREATE_RESOURCE},
+    ModuleEnum.PERFORMANCE_MANAGEMENT: {
+        PermissionCodeEnum.CREATE_RESOURCE,
+        PermissionCodeEnum.PMS_MANAGE_CYCLES,
+        PermissionCodeEnum.PMS_MANAGE_GOAL_TEMPLATES,
+        PermissionCodeEnum.PMS_MANAGE_MASTERS,
+        PermissionCodeEnum.PMS_MANAGE_RATING_SCALE,
+        PermissionCodeEnum.PMS_VIEW_APPRAISAL_HISTORY,
+        PermissionCodeEnum.PMS_MANAGE_TEAM_GOALS,
+        PermissionCodeEnum.PMS_VIEW_TEAM_PROGRESS,
+        PermissionCodeEnum.PMS_MANAGE_MID_YEAR_REVIEW,
+        PermissionCodeEnum.PMS_MANAGE_TEAM_APPRAISAL,
+        PermissionCodeEnum.PMS_MANAGE_OWN_GOALS,
+        PermissionCodeEnum.PMS_UPDATE_OWN_PROGRESS,
+        PermissionCodeEnum.PMS_MANAGE_SELF_APPRAISAL,
+        PermissionCodeEnum.PMS_VIEW_OWN_FINAL_RATING,
+        PermissionCodeEnum.PMS_MANAGE_HOD_GOAL_SETTINGS,
+        PermissionCodeEnum.PMS_REVIEW_EMPLOYEE_SCORECARD,
+        PermissionCodeEnum.PMS_VIEW_TARGET_REVISIONS,
+        PermissionCodeEnum.PMS_APPROVE_TARGET_REVISIONS,
+        PermissionCodeEnum.PMS_REVIEW_ASSESSMENT,
+        PermissionCodeEnum.PMS_MANAGE_HOD_RATING,
+        PermissionCodeEnum.PMS_REVIEW_APPRAISAL,
+        PermissionCodeEnum.PMS_MANAGE_RATING_NORMALIZATION,
+        PermissionCodeEnum.PMS_VIEW_PLANTWISE_APPRAISAL_HISTORY,
+    },
     ModuleEnum.RECRUITMENT: {PermissionCodeEnum.CREATE_RESOURCE},
     ModuleEnum.TRAINING_AND_DEVELOPMENT: {PermissionCodeEnum.CREATE_RESOURCE},
     ModuleEnum.EXPENSE_MANAGEMENT: {

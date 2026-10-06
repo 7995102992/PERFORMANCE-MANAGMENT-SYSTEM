@@ -16,4 +16,14 @@ export default defineConfig({
   optimizeDeps: {
     include: ['recharts'],
   },
+  server: {
+    // Dev only: PMS calls go same-origin through this proxy, so the PMS
+    // backend (pms-app on 8080) doesn't need CORS for the Vite origin.
+    proxy: {
+      '/api/v1/pms': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+    },
+  },
 })

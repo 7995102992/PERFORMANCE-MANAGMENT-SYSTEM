@@ -136,6 +136,12 @@ import KraMaster from "./pages/pms/configuration/kra-master/KraMaster";
 import KpiMaster from "./pages/pms/configuration/kpi-master/KpiMaster";
 import CompetencyMaster from "./pages/pms/configuration/competency-master/CompetencyMaster";
 import RatingScale from "./pages/pms/configuration/rating-scale/RatingScale";
+import CreateRatingScale from "./pages/pms/configuration/rating-scale/CreateRatingScale";
+import TeamGoalSettingPage from "./pages/pms/goal-setting/TeamGoalSettingPage";
+import TargetAssignmentPage from "./pages/pms/goal-setting/TargetAssignmentPage";
+import MyGoalsPage from "./pages/pms/goal-setting/MyGoalsPage";
+import GoalApprovalsPage from "./pages/pms/goal-setting/GoalApprovalsPage";
+import GoalReviewPage from "./pages/pms/goal-setting/GoalReviewPage";
 import PmsComingSoon from "./pages/pms/PmsComingSoon";
 
 // Settings
@@ -841,12 +847,20 @@ const pmsKraMasterRoute = pmsRoute("/pms/configuration/kra-master", () => <KraMa
 const pmsKpiMasterRoute = pmsRoute("/pms/configuration/kpi-master", () => <KpiMaster />);
 const pmsCompetencyMasterRoute = pmsRoute("/pms/configuration/competency-master", () => <CompetencyMaster />);
 const pmsRatingScaleRoute = pmsRoute("/pms/configuration/rating-scale", () => <RatingScale />);
+const pmsCreateRatingScaleRoute = pmsRoute("/pms/configuration/rating-scale/new", () => <CreateRatingScale />);
+
+// Manager goal setting (3.1 - 3.5). The financial year is in the path, e.g. /pms/team-goal-setting/2026.
+const pmsTeamGoalSettingRoute = pmsRoute("/pms/team-goal-setting/$fy", () => <TeamGoalSettingPage />);
+const pmsEmployeeTargetsRoute = pmsRoute("/pms/team-goal-setting/$fy/employee/$employeeUserId", () => <TargetAssignmentPage />);
+
+// Employee goal review (4.x) and HOD approval (5.x).
+const pmsMyGoalsRoute = pmsRoute("/pms/my-goals/$fy", () => <MyGoalsPage />);
+const pmsGoalApprovalsRoute = pmsRoute("/pms/goal-approvals/$fy", () => <GoalApprovalsPage />);
+const pmsGoalReviewRoute = pmsRoute("/pms/goal-approvals/$fy/employee/$employeeUserId", () => <GoalReviewPage />);
 
 // Menu entries whose screens are not designed yet.
 const pmsPlaceholderRoutes = [
-  "my-goals",
   "self-appraisal",
-  "goal-approvals",
   "target-revisions",
   "mid-year-review",
   "team-appraisal",
@@ -1149,6 +1163,12 @@ const routeTree = rootRoute.addChildren([
     pmsKpiMasterRoute,
     pmsCompetencyMasterRoute,
     pmsRatingScaleRoute,
+    pmsCreateRatingScaleRoute,
+    pmsTeamGoalSettingRoute,
+    pmsMyGoalsRoute,
+    pmsGoalApprovalsRoute,
+    pmsGoalReviewRoute,
+    pmsEmployeeTargetsRoute,
     ...pmsPlaceholderRoutes,
     announcementsRoute,
     announcementDetailRoute,

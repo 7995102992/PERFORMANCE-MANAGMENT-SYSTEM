@@ -635,9 +635,11 @@ class EmployeeTools:
         search: str = "",
         has_policies: Optional[bool] = None,
         role_ids: Optional[list[PydanticObjectId]] = None,
+        l1_manager_id: Optional[PydanticObjectId] = None,
     ) -> List[dict]:
         match: dict = {**NOT_DELETED}
         if organisation_id: match["organisation_id"] = organisation_id
+        if l1_manager_id: match["l1_manager_id"] = l1_manager_id
         if business_unit_ids: match["business_unit_id"] = {"$in": business_unit_ids}
         if department_ids: match["department_id"] = {"$in": department_ids}
         if designation_ids: match["designation_id"] = {"$in": designation_ids}

@@ -81,6 +81,21 @@ export interface PmsRatingScaleConfig {
   show_definitions_to_employees: boolean
 }
 
+/** A reusable rating level in the master list the create screen picks from. */
+export interface PmsStandardRatingLevel {
+  id: string
+  label: string
+  definition: string
+  /** `#rrggbb` */
+  color: string
+}
+
+export interface PmsStandardRatingLevelUpsert {
+  label: string
+  definition: string
+  color: string
+}
+
 export type PmsRatingScaleUpdate = Pick<
   PmsRatingScaleConfig,
   'levels' | 'is_default' | 'show_definitions_to_employees'

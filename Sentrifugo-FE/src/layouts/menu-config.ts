@@ -1,3 +1,4 @@
+import { currentFinancialYear } from "@/pages/pms/configuration/config.constants";
 import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
@@ -175,31 +176,31 @@ export const sidebarMenuConfig: MenuSection[] = [
         key: "pms",
         label: "PMS Cycle",
         icon: CalendarRange,
-        // PMS has no IAM module yet. Corporate HR ~ admin until `performance_management`
-        // permission codes exist - then swap `minRole` for `moduleKey` + `permission`.
+        // Each item is gated by its performance_management permission code (seeded in IAM).
         children: [
           {
             key: "pms-configuration",
             label: "Configuration",
             icon: Settings,
             children: [
-              { key: "pms-goal-templates", label: "Goal Templates", path: "/pms/configuration/goal-templates", icon: ListChecks, minRole: "admin" },
-              { key: "pms-kra-master", label: "KRA Master", path: "/pms/configuration/kra-master", icon: Target, minRole: "admin" },
-              { key: "pms-kpi-master", label: "KPI Master", path: "/pms/configuration/kpi-master", icon: ListChecks, minRole: "admin" },
-              { key: "pms-competency-master", label: "Competency Master", path: "/pms/configuration/competency-master", icon: Star, minRole: "admin" },
-              { key: "pms-rating-scale", label: "Rating Scale", path: "/pms/configuration/rating-scale", icon: ListFilter, minRole: "admin" },
+              { key: "pms-goal-templates", label: "Goal Templates", path: "/pms/configuration/goal-templates", icon: ListChecks, moduleKey: "performance_management", permission: "manage_goal_templates" },
+              { key: "pms-kra-master", label: "KRA Master", path: "/pms/configuration/kra-master", icon: Target, moduleKey: "performance_management", permission: "manage_pms_masters" },
+              { key: "pms-kpi-master", label: "KPI Master", path: "/pms/configuration/kpi-master", icon: ListChecks, moduleKey: "performance_management", permission: "manage_pms_masters" },
+              { key: "pms-competency-master", label: "Competency Master", path: "/pms/configuration/competency-master", icon: Star, moduleKey: "performance_management", permission: "manage_pms_masters" },
+              { key: "pms-rating-scale", label: "Rating Scale", path: "/pms/configuration/rating-scale", icon: ListFilter, moduleKey: "performance_management", permission: "manage_rating_scale" },
             ],
           },
-          { key: "pms-initiate-appraisal", label: "Initiate Appraisal", path: "/pms/cycle", icon: Zap, minRole: "admin" },
-          { key: "pms-my-goals", label: "My Goals", path: "/pms/my-goals", icon: Target, minRole: "admin" },
-          { key: "pms-self-appraisal", label: "Self Appraisal", path: "/pms/self-appraisal", icon: User, minRole: "admin" },
-          { key: "pms-goal-approvals", label: "Goal Approvals", path: "/pms/goal-approvals", icon: CheckCircle2, minRole: "admin" },
-          { key: "pms-target-revisions", label: "Target Revisions", path: "/pms/target-revisions", icon: RefreshCw, minRole: "admin" },
-          { key: "pms-mid-year-review", label: "Mid-Year Review", path: "/pms/mid-year-review", icon: Flag, minRole: "admin" },
-          { key: "pms-team-appraisal", label: "Team Appraisal", path: "/pms/team-appraisal", icon: CalendarCheck, minRole: "admin" },
-          { key: "pms-appraisal-history", label: "Appraisal History", path: "/pms/appraisal-history", icon: FileText, minRole: "admin" },
-          { key: "pms-lock-access", label: "Lock Access", path: "/pms/lock-access", icon: UserCog, minRole: "admin" },
-          { key: "pms-cycle-closure", label: "Cycle Closure", path: "/pms/cycle-closure", icon: Archive, minRole: "admin" },
+          { key: "pms-initiate-appraisal", label: "Initiate Appraisal", path: "/pms/cycle", icon: Zap, moduleKey: "performance_management", permission: "manage_pms_cycles" },
+          { key: "pms-my-goals", label: "My Goals", path: `/pms/my-goals/${currentFinancialYear()}`, icon: Target, moduleKey: "performance_management", permission: "manage_own_goals" },
+          { key: "pms-self-appraisal", label: "Self Appraisal", path: "/pms/self-appraisal", icon: User, moduleKey: "performance_management", permission: "manage_self_appraisal" },
+          { key: "pms-team-goal-setting", label: "Team Goal Setting", path: `/pms/team-goal-setting/${currentFinancialYear()}`, icon: CheckCircle2, moduleKey: "performance_management", permission: "manage_team_goals" },
+          { key: "pms-goal-approvals", label: "Goal Approvals", path: `/pms/goal-approvals/${currentFinancialYear()}`, icon: CheckCircle2, moduleKey: "performance_management", permission: "manage_hod_goal_settings" },
+          { key: "pms-target-revisions", label: "Target Revisions", path: "/pms/target-revisions", icon: RefreshCw, moduleKey: "performance_management", permission: "view_target_revisions" },
+          { key: "pms-mid-year-review", label: "Mid-Year Review", path: "/pms/mid-year-review", icon: Flag, moduleKey: "performance_management", permission: "manage_mid_year_review" },
+          { key: "pms-team-appraisal", label: "Team Appraisal", path: "/pms/team-appraisal", icon: CalendarCheck, moduleKey: "performance_management", permission: "manage_team_appraisal" },
+          { key: "pms-appraisal-history", label: "Appraisal History", path: "/pms/appraisal-history", icon: FileText, moduleKey: "performance_management", permission: "view_appraisal_history" },
+          { key: "pms-lock-access", label: "Lock Access", path: "/pms/lock-access", icon: UserCog, moduleKey: "performance_management", permission: "manage_pms_cycles" },
+          { key: "pms-cycle-closure", label: "Cycle Closure", path: "/pms/cycle-closure", icon: Archive, moduleKey: "performance_management", permission: "manage_pms_cycles" },
         ],
       },
       {
