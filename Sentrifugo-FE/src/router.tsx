@@ -137,6 +137,7 @@ import KpiMaster from "./pages/pms/configuration/kpi-master/KpiMaster";
 import CompetencyMaster from "./pages/pms/configuration/competency-master/CompetencyMaster";
 import RatingScale from "./pages/pms/configuration/rating-scale/RatingScale";
 import TeamGoalSettingPage from "./pages/pms/goal-setting/TeamGoalSettingPage";
+import SelectRoleTemplatePage from "./pages/pms/goal-setting/SelectRoleTemplatePage";
 import TargetAssignmentPage from "./pages/pms/goal-setting/TargetAssignmentPage";
 import MyGoalsPage from "./pages/pms/goal-setting/MyGoalsPage";
 import GoalApprovalsPage from "./pages/pms/goal-setting/GoalApprovalsPage";
@@ -849,6 +850,7 @@ const pmsRatingScaleRoute = pmsRoute("/pms/configuration/rating-scale", () => <R
 
 // Manager goal setting (3.1 - 3.5). The financial year is in the path, e.g. /pms/team-goal-setting/2026.
 const pmsTeamGoalSettingRoute = pmsRoute("/pms/team-goal-setting/$fy", () => <TeamGoalSettingPage />);
+const pmsSelectRoleTemplateRoute = pmsRoute("/pms/team-goal-setting/$fy/role", () => <SelectRoleTemplatePage />);
 const pmsEmployeeTargetsRoute = pmsRoute("/pms/team-goal-setting/$fy/employee/$employeeUserId", () => <TargetAssignmentPage />);
 
 // Employee goal review (4.x) and HOD approval (5.x).
@@ -1162,6 +1164,7 @@ const routeTree = rootRoute.addChildren([
     pmsCompetencyMasterRoute,
     pmsRatingScaleRoute,
     pmsTeamGoalSettingRoute,
+    pmsSelectRoleTemplateRoute,
     pmsMyGoalsRoute,
     pmsGoalApprovalsRoute,
     pmsGoalReviewRoute,

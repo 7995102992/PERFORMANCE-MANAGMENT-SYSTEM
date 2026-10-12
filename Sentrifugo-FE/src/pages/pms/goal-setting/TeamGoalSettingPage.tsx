@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "@tanstack/react-router";
+import { CheckCircle2, Circle, Clock, RefreshCw, XCircle, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageLoader } from "@/components/shared/PageLoader";
@@ -6,14 +7,18 @@ import { fyToApi } from "@/store/api/pmsMappers";
 import { useGetPmsTeamQuery } from "@/store/api/pmsApi";
 import { PMS_HEADER_ROW, PmsTableCard, PmsTh } from "../shared/PmsTableCard";
 
-const STATUS_LABEL: Record<string, string> = {
-  not_started: "Not Started",
-  draft: "Draft",
-  sent_to_employee: "Sent to Employee",
-  acknowledged: "Acknowledged",
-  change_requested: "Change Requested",
-  with_hod: "With HOD",
+const STATUS_META: Record<string, { label: string; icon: LucideIcon; className: string; action: string }> = {
+  not_started: { label: "Not Started", icon: Circle, className: "text-muted-foreground", action: "Set Goals" },
+  draft: { label: "Draft", icon: Clock, className: "text-amber-500", action: "Continue" },
+  sent_to_employee: { label: "Sent to Employee", icon: RefreshCw, className: "text-blue-500", action: "View" },
+  acknowledged: { label: "Acknowledged", icon: CheckCircle2, className: "text-emerald-600", action: "View" },
+  change_requested: { label: "Change Requested", icon: XCircle, className: "text-destructive", action: "Revise" },
+  with_hod: { label: "With HOD", icon: RefreshCw, className: "text-blue-500", action: "View" },
+  approved: { label: "Approved", icon: CheckCircle2, className: "text-emerald-600", action: "View" },
 };
+
+const statusMeta = (status: string) =>
+  STATUS_META[status] ?? { label: status.replace(/_/g, " "), icon: Circle, className: "text-muted-foreground", action: "View" };
 
 /** Screen 3.1 - My Team: the manager's direct reports and where each one's goals stand. */
 const TeamGoalSettingPage = () => {
@@ -30,9 +35,14 @@ const TeamGoalSettingPage = () => {
         title="My Team"
         subtitle="Eligible team members and their goal status"
         action={
-          <span className="rounded-md border px-3 py-1.5 text-sm font-medium text-foreground">
-            FY {financialYear}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="rounded-md border px-3 py-1.5 text-sm font-medium text-foreground">
+              FY {financialYear}
+            </span>
+            <Button onClick={() => navigate({ to: "/pms/team-goal-setting/$fy/role", params: { fy } })}>
+              Set Goals
+            </Button>
+          </div>
         }
       />
 
@@ -51,34 +61,41 @@ const TeamGoalSettingPage = () => {
               <tr className={PMS_HEADER_ROW}>
                 <PmsTh>Employee</PmsTh>
                 <PmsTh>Role</PmsTh>
-                <PmsTh>Emp ID</PmsTh>
                 <PmsTh>Goal status</PmsTh>
                 <PmsTh>Action</PmsTh>
               </tr>
             </thead>
             <tbody>
-              {team.map((m) => (
-                <tr key={m.user_id} className="border-t">
-                  <td className="px-4 py-3 font-medium text-foreground">{m.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{m.designation_name || "—"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{m.emp_code}</td>
-                  <td className="px-4 py-3">{STATUS_LABEL[m.goal_status] ?? m.goal_status}</td>
-                  <td className="px-4 py-3">
-                    <Button
-                      variant="link"
-                      className="h-auto p-0"
-                      onClick={() =>
-                        navigate({
-                          to: "/pms/team-goal-setting/$fy/employee/$employeeUserId",
-                          params: { fy, employeeUserId: m.user_id },
-                        })
-                      }
-                    >
-                      {m.goal_status === "not_started" ? "Set Goals" : "Open"}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {team.map((m) => {
+                const meta = statusMeta(m.goal_status);
+                const Icon = meta.icon;
+                return (
+                  <tr key={m.user_id} className="border-t">
+                    <td className="px-4 py-3 font-medium text-foreground">{m.name}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{m.designation_name || "—"}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center gap-1.5 ${meta.className}`}>
+                        <Icon className="h-4 w-4" />
+                        {meta.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Button
+                        variant="link"
+                        className="h-auto p-0"
+                        onClick={() =>
+                          navigate({
+                            to: "/pms/team-goal-setting/$fy/employee/$employeeUserId",
+                            params: { fy, employeeUserId: m.user_id },
+                          })
+                        }
+                      >
+                        {meta.action}
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
