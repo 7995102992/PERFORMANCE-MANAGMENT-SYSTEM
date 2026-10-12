@@ -123,6 +123,15 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Failed to start reporting-line RPC server: {e}")
 
+    # PMS team-roster queue. Separate from reporting_line above, which answers
+    # the same "who reports to this manager" question but for Expense, with a
+    # narrower bare-user-id reply that must not grow fields PMS happens to need.
+    try:
+        from src.rpc.direct_reports import start_direct_reports_rpc
+        start_direct_reports_rpc()
+    except Exception as e:
+        logger.warning(f"Failed to start direct-reports RPC server: {e}")
+
     try:
         from src.rpc.permission_check import start_permission_check_rpc
         start_permission_check_rpc()
@@ -194,6 +203,11 @@ async def lifespan(app: FastAPI):
         await stop_reporting_line_rpc()
     except Exception as e:
         logger.warning(f"Failed to stop reporting-line RPC server: {e}")
+    try:
+        from src.rpc.direct_reports import stop_direct_reports_rpc
+        await stop_direct_reports_rpc()
+    except Exception as e:
+        logger.warning(f"Failed to stop direct-reports RPC server: {e}")
     try:
         from src.rpc.permission_check import stop_permission_check_rpc
         await stop_permission_check_rpc()

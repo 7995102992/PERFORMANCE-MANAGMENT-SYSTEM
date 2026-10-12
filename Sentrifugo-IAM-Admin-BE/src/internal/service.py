@@ -314,6 +314,62 @@ async def reporting_line(manager_id: str, organisation_id: str) -> list[str]:
     return [str(d["user_id"]) for d in docs if d.get("user_id")]
 
 
+_DIRECT_REPORT_PROJECTION = {
+    "user_id": 1,
+    "emp_code": 1,
+    "department_id": 1,
+    "designation_id": 1,
+}
+
+
+async def direct_reports(manager_id: str, organisation_id: str) -> list[dict]:
+    """List a manager's direct reports with enough detail to render a team roster.
+
+    Same one-edge-deep scope as ``reporting_line`` (direct reports only), but
+    returns names, emp_code and designation instead of bare user ids — consumed
+    by PMS to list a manager's team and resolve the designation-specific goal
+    template for each report. Kept as its own query rather than widening
+    ``reporting_line``'s reply shape: that queue's id-only contract is itself a
+    cross-service invariant (Expense's advance-allocation scoping) that must not
+    grow fields a different caller happens to need.
+    """
+    try:
+        uid = PydanticObjectId(str(manager_id))
+        org = PydanticObjectId(str(organisation_id))
+    except Exception:
+        return []
+
+    emps = await EmployeeDocument.get_motor_collection().find(
+        {"l1_manager_id": uid, "organisation_id": org, "deleted_on": None},
+        _DIRECT_REPORT_PROJECTION,
+    ).to_list(length=None)
+    if not emps:
+        return []
+
+    user_ids = [e["user_id"] for e in emps if e.get("user_id")]
+    users = await UserDocument.get_motor_collection().find(
+        {"_id": {"$in": user_ids}}, {"first_name": 1, "last_name": 1, "email": 1}
+    ).to_list(length=len(user_ids)) if user_ids else []
+    user_map = {u["_id"]: u for u in users}
+
+    desg_names = await _designation_names([e.get("designation_id") for e in emps])
+
+    rows: list[dict] = []
+    for e in emps:
+        user = user_map.get(e.get("user_id")) or {}
+        rows.append({
+            "user_id": _s(e.get("user_id")),
+            "emp_code": e.get("emp_code"),
+            "first_name": user.get("first_name"),
+            "last_name": user.get("last_name"),
+            "work_email": user.get("email"),
+            "department_id": _s(e.get("department_id")),
+            "designation_id": _s(e.get("designation_id")),
+            "designation_name": desg_names.get(e.get("designation_id")),
+        })
+    return rows
+
+
 async def permission_check(
     employee_id: str,
     organisation_id: str,

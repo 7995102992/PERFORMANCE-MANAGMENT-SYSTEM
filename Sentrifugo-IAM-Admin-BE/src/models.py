@@ -56,10 +56,10 @@ class ModuleEnum(StrEnum):
     PERFORMANCE_MANAGEMENT = "performance_management"
     RECRUITMENT = "recruitment"
     TRAINING_AND_DEVELOPMENT = "training_and_development"
-    EXPENSE_MANAGEMENT = "expense_management"
     ASSET_MANAGEMENT = "asset_management"
     SERVICE_REQUEST = "service_request"
     TIMESHEET_MANAGEMENT = "timesheet_management"
+    EXPENSE_MANAGEMENT = "expense_management"
     REPORTS_AND_ANALYTICS = "reports_and_analytics"
 
 
@@ -71,10 +71,10 @@ MODULE_LABELS: dict[ModuleEnum, str] = {
     ModuleEnum.PERFORMANCE_MANAGEMENT: "Performance Management",
     ModuleEnum.RECRUITMENT: "Recruitment",
     ModuleEnum.TRAINING_AND_DEVELOPMENT: "Training & Development",
-    ModuleEnum.EXPENSE_MANAGEMENT: "Expense Management",
     ModuleEnum.ASSET_MANAGEMENT: "Asset Management",
     ModuleEnum.SERVICE_REQUEST: "Service Request",
     ModuleEnum.TIMESHEET_MANAGEMENT: "Timesheet Management",
+    ModuleEnum.EXPENSE_MANAGEMENT: "Expense Management",
     ModuleEnum.REPORTS_AND_ANALYTICS: "Reports & Analytics",
 }
 
@@ -115,6 +115,13 @@ class PermissionCodeEnum(StrEnum):
     MANAGE_PROJECTS = "manage_projects"
     MANAGE_SETTINGS = "manage_settings"
     VIEW_REPORTS = "view_reports"
+    # Org-wide read-only oversight: holders see every client, project, task,
+    # resource and employee timesheet, bypassing the department scoping and the
+    # "only your own projects" rule that constrains manage_projects /
+    # manage_clients. Read endpoints only — every write endpoint still enforces
+    # its own permission and returns 403. For auditors / finance / delivery leads
+    # who need the read half of org-admin oversight without any write.
+    VIEW_ALL = "view_all"
 
     # Core HR feature permissions.
     # Employee records (the HR > Employees screen) and the org graph behind the
@@ -130,7 +137,15 @@ class PermissionCodeEnum(StrEnum):
     IT_CLEARANCES = "it_clearances"
     ADMIN_CLEARANCES = "admin_clearances"
     FINAL_SETTLEMENT = "final_settlement"
+
+    # The employee's own payslip — the upload-driven payslip register's only grant.
     MY_PAYROLL = "my_payroll"
+    APPLY_ONBOARDING = "apply_onboarding"
+    MANAGE_ONBOARDING = "manage_onboarding"
+    ONBOARDING_MANAGER_APPROVAL = "onboarding_manager_approval"
+    ONBOARDING_IT_CLEARANCE = "onboarding_it_clearance"
+    ONBOARDING_ADMIN_CLEARANCE = "onboarding_admin_clearance"
+    ONBOARDING_FINANCE_CLEARANCE = "onboarding_finance_clearance"
     # Announcements — manage_ is the admin CRUD/publish surface, view_ is the
     # read-only employee dashboard feed.
     MANAGE_ANNOUNCEMENTS = "manage_announcements"
@@ -154,23 +169,6 @@ class PermissionCodeEnum(StrEnum):
     # across every employee in the organisation, so it is granted deliberately
     # rather than riding along with the per-plan HR rights above.
     VIEW_EMPLOYEE_REPORTS = "view_employee_reports"
-
-    # Expense Management feature permissions.
-    # One approval chain governs all three subjects (expense / trip / advance),
-    # so the same three approval codes cover every one of them — there is no
-    # separate approve_trip or approve_expense_advance.
-    SUBMIT_EXPENSE = "submit_expense"
-    EXPENSE_MANAGER_APPROVAL = "expense_manager_approval"
-    VIEW_EXPENSE_CLAIMS = "view_expense_claims"
-    EXPENSE_FINANCE_APPROVAL = "expense_finance_approval"
-    EXPENSE_L2_APPROVAL = "expense_l2_approval"
-    MANAGE_OWN_TRIPS = "manage_own_trips"
-    REQUEST_EXPENSE_ADVANCE = "request_expense_advance"
-    ALLOT_EXPENSE_ADVANCE = "allot_expense_advance"
-    # Reserved — defined now, deliberately ungranted in v1 so the later phases
-    # (standalone receipt library, admin config UI) need no permission migration.
-    MANAGE_OWN_RECEIPTS = "manage_own_receipts"
-    MANAGE_EXPENSE_CONFIG = "manage_expense_config"
 
     # Service Request feature permissions.
     RAISE_REQUEST = "raise_request"
@@ -214,30 +212,31 @@ class PermissionCodeEnum(StrEnum):
     MANAGER_ATTENDANCE = "manager_attendance"
     HR_ATTENDANCE = "hr_attendance"
 
-    # Performance Management feature permissions — one per PMS screen group.
-    # Owner roles: Corporate HR, Manager, Employee, HOD, HR Governance.
-    PMS_MANAGE_CYCLES = "manage_pms_cycles"
-    PMS_MANAGE_GOAL_TEMPLATES = "manage_goal_templates"
-    PMS_MANAGE_MASTERS = "manage_pms_masters"
-    PMS_MANAGE_RATING_SCALE = "manage_rating_scale"
-    PMS_VIEW_APPRAISAL_HISTORY = "view_appraisal_history"
-    PMS_MANAGE_TEAM_GOALS = "manage_team_goals"
-    PMS_VIEW_TEAM_PROGRESS = "view_team_progress"
-    PMS_MANAGE_MID_YEAR_REVIEW = "manage_mid_year_review"
-    PMS_MANAGE_TEAM_APPRAISAL = "manage_team_appraisal"
-    PMS_MANAGE_OWN_GOALS = "manage_own_goals"
-    PMS_UPDATE_OWN_PROGRESS = "update_own_progress"
-    PMS_MANAGE_SELF_APPRAISAL = "manage_self_appraisal"
-    PMS_VIEW_OWN_FINAL_RATING = "view_own_final_rating"
-    PMS_MANAGE_HOD_GOAL_SETTINGS = "manage_hod_goal_settings"
-    PMS_REVIEW_EMPLOYEE_SCORECARD = "review_employee_scorecard"
-    PMS_VIEW_TARGET_REVISIONS = "view_target_revisions"
-    PMS_APPROVE_TARGET_REVISIONS = "approve_target_revisions"
-    PMS_REVIEW_ASSESSMENT = "review_assessment"
-    PMS_MANAGE_HOD_RATING = "manage_hod_rating"
-    PMS_REVIEW_APPRAISAL = "review_appraisal"
-    PMS_MANAGE_RATING_NORMALIZATION = "manage_rating_normalization"
-    PMS_VIEW_PLANTWISE_APPRAISAL_HISTORY = "view_plantwise_appraisal_history"
+    # PMS / Performance Management permissions
+    MY_GOALS = "my_goals"
+    PROGRESS = "progress"
+    SELF_APPRAISAL = "self_appraisal"
+    MY_RATING = "my_rating"
+    APPRAISAL_HISTORY = "appraisal_history"
+
+    TEAM_GOALS = "team_goals"
+    TEAM_PROGRESS = "team_progress"
+    MID_YEAR_REVIEW = "mid_year_review"
+    TEAM_APPRAISAL = "team_appraisal"
+
+    GOAL_APPROVAL = "goal_approval"
+    TARGET_REVISION = "target_revision"
+    APPRAISAL_REVIEW = "appraisal_review"
+
+    PMS_CYCLE = "pms_cycle"
+    GOAL_TEMPLATE = "goal_template"
+    KRA_MASTER = "kra_master"
+    KPI_MASTER = "kpi_master"
+    COMPETENCY_MASTER = "competency_master"
+    RATING_SCALE = "rating_scale"
+
+    CYCLE_CLOSURE = "cycle_closure"
+    RATING_NORMALIZATION = "rating_normalization"
 
 
 _GENERIC_CRUD: set[PermissionCodeEnum] = {
@@ -260,6 +259,12 @@ MODULE_PERMISSIONS: dict[ModuleEnum, set[PermissionCodeEnum]] = {
         PermissionCodeEnum.ADMIN_CLEARANCES,
         PermissionCodeEnum.FINAL_SETTLEMENT,
         PermissionCodeEnum.MY_PAYROLL,
+        PermissionCodeEnum.APPLY_ONBOARDING,
+        PermissionCodeEnum.MANAGE_ONBOARDING,
+        PermissionCodeEnum.ONBOARDING_MANAGER_APPROVAL,
+        PermissionCodeEnum.ONBOARDING_IT_CLEARANCE,
+        PermissionCodeEnum.ONBOARDING_ADMIN_CLEARANCE,
+        PermissionCodeEnum.ONBOARDING_FINANCE_CLEARANCE,
         PermissionCodeEnum.MANAGE_ANNOUNCEMENTS,
         PermissionCodeEnum.VIEW_ANNOUNCEMENTS,
     },
@@ -278,46 +283,45 @@ MODULE_PERMISSIONS: dict[ModuleEnum, set[PermissionCodeEnum]] = {
         PermissionCodeEnum.MANAGER_ATTENDANCE,
         PermissionCodeEnum.HR_ATTENDANCE,
     },
-    ModuleEnum.PAYROLL: {PermissionCodeEnum.CREATE_RESOURCE},
+    ModuleEnum.PAYROLL: {
+        # The upload-driven payslip register's only grant: reading your own payslip.
+        PermissionCodeEnum.MY_PAYROLL,
+    },
+    # sagarcements - for pms
     ModuleEnum.PERFORMANCE_MANAGEMENT: {
         PermissionCodeEnum.CREATE_RESOURCE,
-        PermissionCodeEnum.PMS_MANAGE_CYCLES,
-        PermissionCodeEnum.PMS_MANAGE_GOAL_TEMPLATES,
-        PermissionCodeEnum.PMS_MANAGE_MASTERS,
-        PermissionCodeEnum.PMS_MANAGE_RATING_SCALE,
-        PermissionCodeEnum.PMS_VIEW_APPRAISAL_HISTORY,
-        PermissionCodeEnum.PMS_MANAGE_TEAM_GOALS,
-        PermissionCodeEnum.PMS_VIEW_TEAM_PROGRESS,
-        PermissionCodeEnum.PMS_MANAGE_MID_YEAR_REVIEW,
-        PermissionCodeEnum.PMS_MANAGE_TEAM_APPRAISAL,
-        PermissionCodeEnum.PMS_MANAGE_OWN_GOALS,
-        PermissionCodeEnum.PMS_UPDATE_OWN_PROGRESS,
-        PermissionCodeEnum.PMS_MANAGE_SELF_APPRAISAL,
-        PermissionCodeEnum.PMS_VIEW_OWN_FINAL_RATING,
-        PermissionCodeEnum.PMS_MANAGE_HOD_GOAL_SETTINGS,
-        PermissionCodeEnum.PMS_REVIEW_EMPLOYEE_SCORECARD,
-        PermissionCodeEnum.PMS_VIEW_TARGET_REVISIONS,
-        PermissionCodeEnum.PMS_APPROVE_TARGET_REVISIONS,
-        PermissionCodeEnum.PMS_REVIEW_ASSESSMENT,
-        PermissionCodeEnum.PMS_MANAGE_HOD_RATING,
-        PermissionCodeEnum.PMS_REVIEW_APPRAISAL,
-        PermissionCodeEnum.PMS_MANAGE_RATING_NORMALIZATION,
-        PermissionCodeEnum.PMS_VIEW_PLANTWISE_APPRAISAL_HISTORY,
+
+        PermissionCodeEnum.MY_GOALS,
+        PermissionCodeEnum.PROGRESS,
+        PermissionCodeEnum.SELF_APPRAISAL,
+        PermissionCodeEnum.MY_RATING,
+        PermissionCodeEnum.APPRAISAL_HISTORY,
+
+        PermissionCodeEnum.TEAM_GOALS,
+        PermissionCodeEnum.TEAM_PROGRESS,
+        PermissionCodeEnum.MID_YEAR_REVIEW,
+        PermissionCodeEnum.TEAM_APPRAISAL,
+
+        PermissionCodeEnum.GOAL_APPROVAL,
+        PermissionCodeEnum.TARGET_REVISION,
+        PermissionCodeEnum.APPRAISAL_REVIEW,
+
+        PermissionCodeEnum.PMS_CYCLE,
+        PermissionCodeEnum.GOAL_TEMPLATE,
+        PermissionCodeEnum.KRA_MASTER,
+        PermissionCodeEnum.KPI_MASTER,
+        PermissionCodeEnum.COMPETENCY_MASTER,
+        PermissionCodeEnum.RATING_SCALE,
+
+        PermissionCodeEnum.CYCLE_CLOSURE,
+        PermissionCodeEnum.RATING_NORMALIZATION,
     },
+
+
+
+
     ModuleEnum.RECRUITMENT: {PermissionCodeEnum.CREATE_RESOURCE},
     ModuleEnum.TRAINING_AND_DEVELOPMENT: {PermissionCodeEnum.CREATE_RESOURCE},
-    ModuleEnum.EXPENSE_MANAGEMENT: {
-        PermissionCodeEnum.SUBMIT_EXPENSE,
-        PermissionCodeEnum.EXPENSE_MANAGER_APPROVAL,
-        PermissionCodeEnum.VIEW_EXPENSE_CLAIMS,
-        PermissionCodeEnum.EXPENSE_FINANCE_APPROVAL,
-        PermissionCodeEnum.EXPENSE_L2_APPROVAL,
-        PermissionCodeEnum.MANAGE_OWN_TRIPS,
-        PermissionCodeEnum.REQUEST_EXPENSE_ADVANCE,
-        PermissionCodeEnum.ALLOT_EXPENSE_ADVANCE,
-        PermissionCodeEnum.MANAGE_OWN_RECEIPTS,
-        PermissionCodeEnum.MANAGE_EXPENSE_CONFIG,
-    },
     ModuleEnum.ASSET_MANAGEMENT: {PermissionCodeEnum.CREATE_RESOURCE},
     ModuleEnum.SERVICE_REQUEST: {
         PermissionCodeEnum.RAISE_REQUEST,
@@ -336,7 +340,9 @@ MODULE_PERMISSIONS: dict[ModuleEnum, set[PermissionCodeEnum]] = {
         PermissionCodeEnum.MANAGE_PROJECTS,
         PermissionCodeEnum.MANAGE_SETTINGS,
         PermissionCodeEnum.VIEW_REPORTS,
+        PermissionCodeEnum.VIEW_ALL,
     },
+    ModuleEnum.EXPENSE_MANAGEMENT: {PermissionCodeEnum.CREATE_RESOURCE},
     ModuleEnum.REPORTS_AND_ANALYTICS: {
         PermissionCodeEnum.REPORTS,
         # Service Request analytics — role-based dashboards enforced by the SRM
@@ -380,7 +386,14 @@ PERMISSION_LABELS: dict[tuple[ModuleEnum, PermissionCodeEnum], str] = {
     (ModuleEnum.CORE_HR, PermissionCodeEnum.IT_CLEARANCES): "IT Clearances",
     (ModuleEnum.CORE_HR, PermissionCodeEnum.ADMIN_CLEARANCES): "Admin Clearances",
     (ModuleEnum.CORE_HR, PermissionCodeEnum.FINAL_SETTLEMENT): "Final Settlement",
+    (ModuleEnum.PAYROLL, PermissionCodeEnum.MY_PAYROLL): "My Payslip",
     (ModuleEnum.CORE_HR, PermissionCodeEnum.MY_PAYROLL): "My Payroll",
+    (ModuleEnum.CORE_HR, PermissionCodeEnum.APPLY_ONBOARDING): "Apply Onboarding",
+    (ModuleEnum.CORE_HR, PermissionCodeEnum.MANAGE_ONBOARDING): "Manage Onboarding",
+    (ModuleEnum.CORE_HR, PermissionCodeEnum.ONBOARDING_MANAGER_APPROVAL): "Onboarding Manager Approval",
+    (ModuleEnum.CORE_HR, PermissionCodeEnum.ONBOARDING_IT_CLEARANCE): "Onboarding IT Clearance",
+    (ModuleEnum.CORE_HR, PermissionCodeEnum.ONBOARDING_ADMIN_CLEARANCE): "Onboarding Admin Clearance",
+    (ModuleEnum.CORE_HR, PermissionCodeEnum.ONBOARDING_FINANCE_CLEARANCE): "Onboarding Finance Clearance",
     (ModuleEnum.CORE_HR, PermissionCodeEnum.MANAGE_ANNOUNCEMENTS): "Manage Announcements",
     (ModuleEnum.CORE_HR, PermissionCodeEnum.VIEW_ANNOUNCEMENTS): "View Announcements",
     (ModuleEnum.TIMESHEET_MANAGEMENT, PermissionCodeEnum.MY_TIMESHEET): "My Timesheet",
@@ -390,6 +403,7 @@ PERMISSION_LABELS: dict[tuple[ModuleEnum, PermissionCodeEnum], str] = {
     (ModuleEnum.TIMESHEET_MANAGEMENT, PermissionCodeEnum.MANAGE_PROJECTS): "Manage Projects",
     (ModuleEnum.TIMESHEET_MANAGEMENT, PermissionCodeEnum.MANAGE_SETTINGS): "Manage Settings",
     (ModuleEnum.TIMESHEET_MANAGEMENT, PermissionCodeEnum.VIEW_REPORTS): "View Reports",
+    (ModuleEnum.TIMESHEET_MANAGEMENT, PermissionCodeEnum.VIEW_ALL): "View all timesheet data",
     (ModuleEnum.LEAVE_MANAGEMENT, PermissionCodeEnum.HOLIDAY_PLAN): "Holiday Plan",
     (ModuleEnum.LEAVE_MANAGEMENT, PermissionCodeEnum.LEAVE_PLAN): "Leave Plan",
     (ModuleEnum.LEAVE_MANAGEMENT, PermissionCodeEnum.WORK_CALENDAR): "Work Calendar",
@@ -403,16 +417,6 @@ PERMISSION_LABELS: dict[tuple[ModuleEnum, PermissionCodeEnum], str] = {
     (ModuleEnum.LEAVE_MANAGEMENT, PermissionCodeEnum.MY_ATTENDANCE): "My Attendance",
     (ModuleEnum.LEAVE_MANAGEMENT, PermissionCodeEnum.MANAGER_ATTENDANCE): "Manager Attendance",
     (ModuleEnum.LEAVE_MANAGEMENT, PermissionCodeEnum.HR_ATTENDANCE): "HR Attendance",
-    (ModuleEnum.EXPENSE_MANAGEMENT, PermissionCodeEnum.SUBMIT_EXPENSE): "Submit Expense",
-    (ModuleEnum.EXPENSE_MANAGEMENT, PermissionCodeEnum.EXPENSE_MANAGER_APPROVAL): "Approve as Manager (L1)",
-    (ModuleEnum.EXPENSE_MANAGEMENT, PermissionCodeEnum.VIEW_EXPENSE_CLAIMS): "View All Expense Claims",
-    (ModuleEnum.EXPENSE_MANAGEMENT, PermissionCodeEnum.EXPENSE_FINANCE_APPROVAL): "Approve as Finance",
-    (ModuleEnum.EXPENSE_MANAGEMENT, PermissionCodeEnum.EXPENSE_L2_APPROVAL): "Approve as Management (L2)",
-    (ModuleEnum.EXPENSE_MANAGEMENT, PermissionCodeEnum.MANAGE_OWN_TRIPS): "Manage Own Trips",
-    (ModuleEnum.EXPENSE_MANAGEMENT, PermissionCodeEnum.REQUEST_EXPENSE_ADVANCE): "Request Advance",
-    (ModuleEnum.EXPENSE_MANAGEMENT, PermissionCodeEnum.ALLOT_EXPENSE_ADVANCE): "Allocate Advance",
-    (ModuleEnum.EXPENSE_MANAGEMENT, PermissionCodeEnum.MANAGE_OWN_RECEIPTS): "Manage Own Receipts (reserved)",
-    (ModuleEnum.EXPENSE_MANAGEMENT, PermissionCodeEnum.MANAGE_EXPENSE_CONFIG): "Manage Expense Config (reserved)",
     (ModuleEnum.SERVICE_REQUEST, PermissionCodeEnum.RAISE_REQUEST): "Raise Request",
     (ModuleEnum.SERVICE_REQUEST, PermissionCodeEnum.EXECUTE_REQUEST): "Execute Request",
     (ModuleEnum.SERVICE_REQUEST, PermissionCodeEnum.APPROVE_REQUEST): "Approve Request",
@@ -454,6 +458,12 @@ _GENERIC_LABELS: dict[PermissionCodeEnum, str] = {
 }
 
 
+#: One sentence per grant, surfaced as a tooltip beside the label in the role
+#: permission grid. A label says what a permission is called; these say what it
+#: lets somebody do, and — where it matters more — what it does NOT.
+PERMISSION_DESCRIPTIONS: dict[tuple[ModuleEnum, PermissionCodeEnum], str] = {}
+
+
 def permission_label(module: ModuleEnum, code: PermissionCodeEnum) -> str:
     """Return the display label for a (module, code) pair."""
     return (
@@ -461,6 +471,16 @@ def permission_label(module: ModuleEnum, code: PermissionCodeEnum) -> str:
         or _GENERIC_LABELS.get(code)
         or code.value.replace("_", " ").title()
     )
+
+
+def permission_description(module: ModuleEnum, code: PermissionCodeEnum) -> str | None:
+    """Return the tooltip text for a (module, code) pair, or ``None``.
+
+    ``None`` rather than a generated sentence: an invented description reads as
+    authoritative and would be wrong, whereas a missing tooltip is simply a
+    tooltip nobody wrote yet.
+    """
+    return PERMISSION_DESCRIPTIONS.get((module, code))
 
 
 def permission_doc_id(module: ModuleEnum, code: PermissionCodeEnum) -> str:
@@ -528,6 +548,7 @@ class AssetDocument(Document, AuditMixin):
     storage_key: str        # path in DO Spaces bucket
     file_url: str           # full public CDN URL
     folder: str             # logical group: "org-documents", "org-logos", "employee-photos"
+    is_public: bool = True  # public CDN url vs presigned/proxied url at serve time
     # Tenant that owns this asset. Set for uploads made through the authenticated
     # /assets API so reads/deletes can be scoped to the caller's org (H2). Null
     # for legacy/system assets (accessed via their owning module, not directly).
@@ -632,6 +653,10 @@ class PermissionDocument(Document):
     module: ModuleEnum
     code: PermissionCodeEnum
     label: str
+    #: Tooltip text for the role permission grid. Optional — a permission
+    #: nobody has written one for simply renders without a tooltip, which is
+    #: better than a generated sentence that reads as authoritative.
+    description: str | None = None
 
     class Settings:
         name = "permissions"
@@ -715,3 +740,4 @@ class MasterDataCompact(CustomModel):
     value: str
     is_active: bool = Field(True, alias="isActive")
 
+ 
