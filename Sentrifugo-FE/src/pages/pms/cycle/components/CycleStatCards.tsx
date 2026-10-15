@@ -10,8 +10,10 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PmsCycleStatus, PmsCycleSummary } from "@/types/pms";
 
+/** The value of the list status filter: a cycle status, or "all". */
 export type CycleFilter = PmsCycleStatus | "all";
 
+/** One stat card per status; `key` is also the filter value and the key into the summary counts. */
 const CARDS: {
   key: CycleFilter;
   label: string;
@@ -25,10 +27,15 @@ const CARDS: {
   { key: "cancelled", label: "Cancelled", icon: XCircle, tone: "bg-muted text-muted-foreground" },
 ];
 
+/** Props for CycleStatCards. */
 interface CycleStatCardsProps {
+  /** Counts per status from the list response (they ignore the status filter, so they stay stable). */
   summary?: PmsCycleSummary;
+  /** The card (filter) currently active. */
   selected: CycleFilter;
+  /** Called with the clicked card filter. */
   onSelect: (filter: CycleFilter) => void;
+  /** Shows a skeleton instead of the counts. */
   loading?: boolean;
 }
 

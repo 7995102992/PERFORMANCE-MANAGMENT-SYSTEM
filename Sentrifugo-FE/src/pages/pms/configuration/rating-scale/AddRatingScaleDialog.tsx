@@ -1,12 +1,10 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -15,9 +13,12 @@ import { toast } from "@/lib/toast";
 import { useCreatePmsRatingScaleMutation } from "@/store/api/pmsApi";
 import type { PmsRatingScaleUpdate } from "@/types/pms-config";
 
+/** One level in the dialog, kept as strings while the user types. */
 type Row = { label: string; definition: string; min: string; max: string };
 
+/** Level counts the scale can have. */
 const LEVEL_OPTIONS = [3, 4, 5, 6, 7];
+/** Standard labels used to pre-fill a five-point scale. */
 const FIVE_POINT_LABELS = ["Outstanding", "Exceeds Expectations", "Meets Expectations", "Needs Improvement", "Unsatisfactory"];
 
 /** Blank rows for n levels; the five-point scale starts from the standard labels and ranges. */
@@ -31,44 +32,36 @@ const blankRows = (n: number): Row[] => {
   return Array.from({ length: n }, (_, i) => ({ label: `Level ${n - i}`, definition: "", min: "", max: "" }));
 };
 
+/** Colour given to each level in order (top level first). */
 const COLOURS = ["#16A34A", "#2563EB", "#6366F1", "#D97706", "#DC2626", "#0891B2", "#7C3AED"];
 
-/** Screen 2.13 "Add Rating Scale". Creates one scale; the API checks ranges do not overlap. */
-const AddRatingScaleDialog = ({
-  open,
+/** The form inside the dialog; it mounts each time the dialog opens, so it always starts blank. */
+const AddRatingScaleForm = ({
   onOpenChange,
   onCreated,
 }: {
-  open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (id: string) => void;
 }) => {
+  // Dialog form state: name, number of levels and the level rows.
   const [createScale, { isLoading: saving }] = useCreatePmsRatingScaleMutation();
   const [name, setName] = useState("");
   const [count, setCount] = useState(5);
   const [rows, setRows] = useState<Row[]>(() => blankRows(5));
-  const [isDefault, setIsDefault] = useState(false);
-  const [showDefinitions, setShowDefinitions] = useState(true);
+  // A message under the table when the ranges overlap or leave a gap.
+  const [rangeError, setRangeError] = useState<string | null>(null);
 
-  // Reset the form each time the dialog opens.
-  useEffect(() => {
-    if (open) {
-      setName("");
-      setCount(5);
-      setRows(blankRows(5));
-      setIsDefault(false);
-      setShowDefinitions(true);
-    }
-  }, [open]);
-
+  /** Changes the number of levels and restarts the rows for that count. */
   const changeCount = (n: number) => {
     setCount(n);
     setRows(blankRows(n));
   };
 
+  /** Updates one field of one level row. */
   const updateRow = (i: number, field: keyof Row, value: string) =>
     setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
 
+  /** Checks a name and a valid score range for every level, then creates the scale and reports its id. */
   const submit = async () => {
     if (!name.trim()) {
       toast.error("Give the rating scale a name");
@@ -83,9 +76,28 @@ const AddRatingScaleDialog = ({
       toast.error("Enter a label and a score range for every level, with the maximum not below the minimum");
       return;
     }
+    // Ranges must not overlap and must cover 1.00 to the top rating (the next level starts within 0.01).
+    const sorted = rows
+      .map((r, i) => ({ rating: count - i, min: Number(r.min), max: Number(r.max) }))
+      .sort((a, b) => a.rating - b.rating);
+    const covers = (() => {
+      if (Math.abs(sorted[0].min - 1) > 0.001) return "The lowest level must start at 1.00";
+      if (Math.abs(sorted[sorted.length - 1].max - count) > 0.001) return `The top level must end at ${count}.00`;
+      for (let i = 1; i < sorted.length; i++) {
+        const gap = sorted[i].min - sorted[i - 1].max;
+        if (gap <= 0) return `Rating ${sorted[i].rating} overlaps rating ${sorted[i - 1].rating}`;
+        if (gap > 0.0101) return `There is a gap between rating ${sorted[i - 1].rating} and ${sorted[i].rating}`;
+      }
+      return null;
+    })();
+    if (covers) {
+      setRangeError(covers);
+      return;
+    }
+    setRangeError(null);
     const body: PmsRatingScaleUpdate = {
-      is_default: isDefault,
-      show_definitions_to_employees: showDefinitions,
+      is_default: false,
+      show_definitions_to_employees: true,
       levels: rows.map((r, i) => ({
         rating: count - i,
         label: r.label.trim(),
@@ -106,11 +118,9 @@ const AddRatingScaleDialog = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Add Rating Scale</DialogTitle>
-          <DialogDescription>Define the levels, their score ranges and what each one means.</DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
@@ -167,18 +177,9 @@ const AddRatingScaleDialog = ({
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-xs text-muted-foreground">Score ranges must not overlap.</p>
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-6 text-sm">
-          <label className="flex items-center gap-2">
-            <Checkbox checked={isDefault} onCheckedChange={(v) => setIsDefault(v === true)} aria-label="Default scale" />
-            Set as default scale for new cycles
-          </label>
-          <label className="flex items-center gap-2">
-            <Checkbox checked={showDefinitions} onCheckedChange={(v) => setShowDefinitions(v === true)} aria-label="Show definitions" />
-            Show definitions to employees
-          </label>
+          <p className={`mt-2 text-xs ${rangeError ? "text-destructive" : "text-muted-foreground"}`}>
+            {rangeError ?? `Score ranges must not overlap and must cover 1.00 – ${count}.00.`}
+          </p>
         </div>
 
         <DialogFooter>
@@ -186,8 +187,22 @@ const AddRatingScaleDialog = ({
           <Button onClick={submit} disabled={saving}>{saving ? "Saving…" : "Save Scale"}</Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
   );
 };
+
+/** Screen 2.13 "Add Rating Scale". Creates one scale; ranges must not overlap and must cover the scale. */
+const AddRatingScaleDialog = ({
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onCreated: (id: string) => void;
+}) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    {open && <AddRatingScaleForm onOpenChange={onOpenChange} onCreated={onCreated} />}
+  </Dialog>
+);
 
 export default AddRatingScaleDialog;

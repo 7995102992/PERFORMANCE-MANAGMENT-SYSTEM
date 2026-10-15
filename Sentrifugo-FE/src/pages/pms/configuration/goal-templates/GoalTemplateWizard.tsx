@@ -29,14 +29,18 @@ import { TEMPLATE_STEP_SCHEMAS } from "./template.schema";
 import type { TemplateFormValues } from "./template.types";
 import { buildFormValues, toApiBody } from "./template.utils";
 
+/** The three wizard steps. */
 const STEPS = [
   { id: 0, label: "Basic Info" },
   { id: 1, label: "KRA & KPI" },
   { id: 2, label: "Competencies" },
 ];
+/** Index of the last step (Competencies). */
 const LAST_STEP = STEPS.length - 1;
+/** A saved template has passed every step once, so all steps are clickable. */
 const ALL_DONE = new Set(STEPS.map((s) => s.id));
 
+/** Page title and subtitle shown for each step. */
 const HEADERS = [
   { title: "Create / Edit Template – Basic Info", subtitle: "Template details" },
   { title: "KRA & KPI Configuration", subtitle: "Select KRAs and configure their KPIs" },
@@ -71,12 +75,14 @@ const GoalTemplateWizard = ({ readOnly = false }: { readOnly?: boolean }) => {
   const stepRef = useRef(0);
   const hydrated = useRef(false);
 
+  // One form for all three steps; the resolver validates only the step on screen.
   const form = useForm<TemplateFormValues>({
     mode: "onChange",
     resolver: ((values, context, options) =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       zodResolver(TEMPLATE_STEP_SCHEMAS[stepRef.current] as any)(values as any, context, options as any)) as Resolver<TemplateFormValues>,
   });
+  // react-hook-form helpers used by the step handlers below.
   const { trigger, getValues, reset, control, formState } = form;
   const releaseGuard = useNavigationGuard(formState.isDirty && !readOnly);
 
@@ -94,11 +100,13 @@ const GoalTemplateWizard = ({ readOnly = false }: { readOnly?: boolean }) => {
   }, [name, existing?.basic.name, dispatch]);
   useEffect(() => () => void dispatch(setBreadcrumbDetail(null)), [dispatch]);
 
+  /** Leaves the wizard for the template list (without the unsaved-changes prompt). */
   const goToList = () => {
     releaseGuard();
     navigate({ to: GOAL_TEMPLATES_PATH });
   };
 
+  /** Shows step `next` and scrolls to the top. */
   const goToStep = (next: number) => {
     stepRef.current = next;
     setStep(next);
@@ -119,11 +127,13 @@ const GoalTemplateWizard = ({ readOnly = false }: { readOnly?: boolean }) => {
   const interimStatus = (): PmsTemplateStatus =>
     existing && existing.basic.status !== "draft" ? getValues("basic.status") : "draft";
 
+  /** Validates one step; focuses the first invalid field and returns whether it passed. */
   const validateStep = async (id: number) => {
     stepRef.current = id;
     return trigger(undefined, { shouldFocus: true });
   };
 
+  /** Validates and saves the current step to the API (so a half-built template survives as a draft), then moves on. */
   const handleSaveAndNext = async () => {
     if (!readOnly) {
       if (!(await validateStep(step))) return;
@@ -139,6 +149,7 @@ const GoalTemplateWizard = ({ readOnly = false }: { readOnly?: boolean }) => {
     goToStep(step + 1);
   };
 
+  /** Saves the template as a draft after only the basic info is valid, then returns to the list. */
   const handleSaveDraft = async () => {
     if (!(await validateStep(0))) {
       goToStep(0);
@@ -156,6 +167,7 @@ const GoalTemplateWizard = ({ readOnly = false }: { readOnly?: boolean }) => {
     }
   };
 
+  /** Validates every step, saves with the status chosen on step 1, then returns to the list. */
   const handleFinish = async () => {
     if (readOnly) return goToList();
     for (const s of STEPS) {
@@ -182,6 +194,7 @@ const GoalTemplateWizard = ({ readOnly = false }: { readOnly?: boolean }) => {
     return <PageLoader message="Loading template…" />;
   }
 
+  // Title and subtitle of the step on screen.
   const header = HEADERS[step];
   const title =
     step === 0 && templateId && readOnly ? "Goal Template – Basic Info" : header.title;
@@ -206,13 +219,14 @@ const GoalTemplateWizard = ({ readOnly = false }: { readOnly?: boolean }) => {
         </div>
 
         <FormProvider {...form}>
-          <fieldset disabled={readOnly} className="min-w-0 border-0 p-0">
+          {/* Step 2 handles view-only itself (its KRA headers must stay clickable to open the KPIs). */}
+          <fieldset disabled={readOnly && step !== 1} className="min-w-0 border-0 p-0">
             <div
               key={step}
               className="px-6 py-6 duration-200 animate-in fade-in-0 slide-in-from-bottom-1 sm:px-10"
             >
               {step === 0 && <TemplateBasicStep />}
-              {step === 1 && <TemplateKraKpiStep />}
+              {step === 1 && <TemplateKraKpiStep readOnly={readOnly} />}
               {step === 2 && <TemplateCompetencyStep />}
             </div>
           </fieldset>

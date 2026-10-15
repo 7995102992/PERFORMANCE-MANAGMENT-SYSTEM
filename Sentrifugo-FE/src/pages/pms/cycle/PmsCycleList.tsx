@@ -1,16 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  CalendarDays,
-  Download,
-  Eye,
-  Pencil,
-  Plus,
-  RotateCcw,
-  Search,
-} from "lucide-react";
+import { CalendarDays, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -28,265 +19,125 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { TablePagination } from "@/components/shared/TablePagination";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { toast } from "@/lib/toast";
-import {
-  useExportPmsCyclesMutation,
-  useGetPmsCyclesQuery,
-  useGetPmsPlantsQuery,
-} from "@/store/api/pmsApi";
-import type {
-  PmsAppraisalType,
-  PmsCycleListItem,
-  PmsCycleListParams,
-} from "@/types/pms";
-import { CycleStatCards, type CycleFilter } from "./components/CycleStatCards";
+import { useGetPmsCyclesQuery, usePublishPmsCycleMutation } from "@/store/api/pmsApi";
+import type { PmsCycleListItem, PmsCycleListParams } from "@/types/pms";
 import { CycleStatusBadge } from "./components/CycleStatusBadge";
-import {
-  APPRAISAL_TYPE_LABEL,
-  APPRAISAL_TYPE_OPTIONS,
-  CYCLE_STATUS_META,
-} from "./cycle.constants";
-import {
-  financialYearLabel,
-  formatDisplayDate,
-  formatMonthYear,
-} from "../shared/pms.utils";
+import { APPRAISAL_TYPE_LABEL } from "./cycle.constants";
+import { financialYearLabel, formatDisplayDate } from "../shared/pms.utils";
 
-/**
- * PMS cycle list: stat cards that double as status filters, a search box and filters, the cycle table
- * with per-row actions, pagination, and export. Opens the wizard to create, edit or view a cycle.
- */
-const ALL = "all";
+/** Status tabs of the mockup. "Closed" also lists cancelled cycles, which have no tab of their own. */
+type Tab = "all" | "active" | "draft" | "closed";
 
-const HEADERS = [
-  "Cycle ID",
-  "Cycle Name",
-  "Type",
-  "Appraisal Period",
-  "Applicable To",
-  "Created On",
-  "Status",
-  "",
-];
+/** Column titles of the cycle table. */
+const HEADERS = ["Cycle Name", "Period", "Type", "Status", "Actions"];
 
-// Last three financial years plus the next one.
+/** Last three financial years plus the next one. */
 const YEAR_OPTIONS = (() => {
   const now = new Date();
   const current = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
   return [current + 1, current, current - 1, current - 2, current - 3];
 })();
 
+/** The financial year the list opens on. */
+const CURRENT_YEAR = (() => {
+  const now = new Date();
+  return now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+})();
+
+/**
+ * Screen 1.1 - PMS Cycle (route /pms/cycle): the financial-year selector, the "Initialize New Appraisal"
+ * button, the All / Active / Draft / Closed tabs and the cycle table. A draft is edited or published from
+ * its row; a closed cycle is viewed or cloned into a new one.
+ */
 const PmsCycleList = () => {
   const navigate = useNavigate();
+  const [tab, setTab] = useState<Tab>("all");
+  const [year, setYear] = useState(String(CURRENT_YEAR));
+  const [publishCycle, { isLoading: publishing }] = usePublishPmsCycleMutation();
 
-  const [status, setStatus] = useState<CycleFilter>(ALL);
-  const [search, setSearch] = useState("");
-  const [year, setYear] = useState(ALL);
-  const [type, setType] = useState(ALL);
-  const [plant, setPlant] = useState(ALL);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  const debouncedSearch = useDebouncedValue(search, 300);
-
+  // Query parameters: the closed tab asks for closed cycles; cancelled ones are filtered in with them below.
   const params = useMemo<PmsCycleListParams>(
     () => ({
-      search: debouncedSearch.trim() || undefined,
-      year: year === ALL ? undefined : Number(year),
-      type: type === ALL ? undefined : (type as PmsAppraisalType),
-      plant_id: plant === ALL ? undefined : plant,
-      status: status === ALL ? undefined : status,
-      skip: (page - 1) * pageSize,
-      limit: pageSize,
+      year: Number(year),
+      status: tab === "all" ? undefined : tab,
+      skip: 0,
+      limit: 100,
     }),
-    [debouncedSearch, year, type, plant, status, page, pageSize],
+    [year, tab],
   );
-
   const { data, isLoading, isFetching } = useGetPmsCyclesQuery(params);
-  const { data: plants = [] } = useGetPmsPlantsQuery();
-  const [exportCycles, { isLoading: exporting }] = useExportPmsCyclesMutation();
-
   const items = data?.items ?? [];
-  const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const hasFilters =
-    search !== "" || year !== ALL || type !== ALL || plant !== ALL || status !== ALL;
 
-  // Any filter change goes back to page 1.
-  const withReset =
-    <T,>(set: (v: T) => void) =>
-    (v: T) => {
-      set(v);
-      setPage(1);
-    };
-
-  const resetFilters = () => {
-    setStatus(ALL);
-    setSearch("");
-    setYear(ALL);
-    setType(ALL);
-    setPlant(ALL);
-    setPage(1);
-  };
-
+  /** Opens the wizard for a cycle: the edit route when `edit` is true, otherwise the read-only view. */
   const openCycle = (cycle: PmsCycleListItem, edit = false) =>
     navigate({
       to: edit ? "/pms/cycle/$cycleId/edit" : "/pms/cycle/$cycleId",
       params: { cycleId: cycle.id },
     });
 
-  const handleExport = async () => {
+  /** Clone: a new cycle starts from this one, with the dates left to pick. */
+  const clone = (cycle: PmsCycleListItem) =>
+    navigate({ to: "/pms/cycle/new", search: { clone: cycle.id } as never });
+
+  /** Publishes a draft and opens the Cycle Activated screen. */
+  const publish = async (cycle: PmsCycleListItem) => {
     try {
-      const blob = await exportCycles({ ...params, skip: undefined, limit: undefined }).unwrap();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "pms-cycles.csv";
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      await publishCycle(cycle.id).unwrap();
+      navigate({ to: "/pms/cycle/$cycleId/activated", params: { cycleId: cycle.id } });
     } catch (e) {
-      toast.error(e, "Could not export the cycles");
+      // An incomplete draft lists what is missing; open it so the gaps can be fixed.
+      toast.error(e, "Could not publish the cycle. Complete every step first.");
     }
   };
+
+  const link = "font-medium text-primary hover:underline disabled:opacity-50";
 
   return (
     <div className="space-y-6 p-6">
       <PageHeader
         title="PMS Cycle"
-        subtitle="Create and manage appraisal cycles for your organization"
+        subtitle="View all appraisal cycles and start a new one"
         action={
-          <Button onClick={() => navigate({ to: "/pms/cycle/new" })}>
-            <Plus /> Initialize New Appraisal
-          </Button>
+          <div className="flex items-center gap-3">
+            <Select value={year} onValueChange={setYear}>
+              <SelectTrigger aria-label="Financial year" className="w-40 font-medium">
+                <CalendarDays className="size-4 text-muted-foreground" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {YEAR_OPTIONS.map((y) => (
+                  <SelectItem key={y} value={String(y)}>
+                    {financialYearLabel(y)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button onClick={() => navigate({ to: "/pms/cycle/new" })}>
+              <Plus /> Initialize New Appraisal
+            </Button>
+          </div>
         }
       />
 
-      <CycleStatCards
-        summary={data?.summary}
-        selected={status}
-        onSelect={withReset(setStatus)}
-        loading={isLoading}
-      />
-
       <div className="overflow-hidden rounded-xl border bg-card">
-        <Tabs
-          value={status}
-          onValueChange={(v) => withReset(setStatus)(v as CycleFilter)}
-        >
+        <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
           <TabsList className="px-3">
             <TabsTrigger value="all">All Cycles</TabsTrigger>
-            {(["active", "draft", "closed", "cancelled"] as const).map((s) => (
-              <TabsTrigger key={s} value={s}>
-                {CYCLE_STATUS_META[s].label}
-              </TabsTrigger>
-            ))}
+            <TabsTrigger value="active">Active</TabsTrigger>
+            <TabsTrigger value="draft">Draft</TabsTrigger>
+            <TabsTrigger value="closed">Closed</TabsTrigger>
           </TabsList>
         </Tabs>
-
-        <div className="flex flex-wrap items-center gap-2.5 p-4">
-          <div className="relative w-full sm:w-64">
-            <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              size={16}
-            />
-            <Input
-              value={search}
-              onChange={(e) => withReset(setSearch)(e.target.value)}
-              placeholder="Search Cycle ID or name…"
-              className="pl-9"
-            />
-          </div>
-
-          <Select value={year} onValueChange={withReset(setYear)}>
-            <SelectTrigger className="w-36">
-              <CalendarDays className="size-4 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>All Years</SelectItem>
-              {YEAR_OPTIONS.map((y) => (
-                <SelectItem key={y} value={String(y)}>
-                  {financialYearLabel(y)}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={type} onValueChange={withReset(setType)}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>All Types</SelectItem>
-              {APPRAISAL_TYPE_OPTIONS.map((o) => (
-                <SelectItem key={o.value} value={o.value}>
-                  {o.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={plant} onValueChange={withReset(setPlant)}>
-            <SelectTrigger className="w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>All Plants</SelectItem>
-              {plants.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={status}
-            onValueChange={(v) => withReset(setStatus)(v as CycleFilter)}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL}>All Status</SelectItem>
-              {(["draft", "active", "closed", "cancelled"] as const).map((s) => (
-                <SelectItem key={s} value={s}>
-                  {CYCLE_STATUS_META[s].label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="ml-auto flex items-center gap-2">
-            {hasFilters && (
-              <Button variant="ghost" onClick={resetFilters}>
-                <RotateCcw /> Reset
-              </Button>
-            )}
-            <Button variant="outline" onClick={handleExport} disabled={exporting}>
-              <Download /> {exporting ? "Exporting…" : "Export Data"}
-            </Button>
-          </div>
-        </div>
 
         <Table>
           <TableHeader>
             <TableRow className="border-y border-table-border bg-table-header hover:bg-table-header">
-              {HEADERS.map((h, i) => (
+              {HEADERS.map((h) => (
                 <TableHead
-                  key={h || i}
+                  key={h}
                   className="h-10 text-xs font-medium uppercase tracking-wide text-muted-foreground"
                 >
                   {h}
@@ -296,10 +147,10 @@ const PmsCycleList = () => {
           </TableHeader>
           <TableBody className={isFetching && !isLoading ? "opacity-60 transition-opacity" : ""}>
             {isLoading ? (
-              Array.from({ length: 5 }, (_, r) => (
+              Array.from({ length: 4 }, (_, r) => (
                 <TableRow key={r}>
-                  {HEADERS.map((_h, c) => (
-                    <TableCell key={c}>
+                  {HEADERS.map((h) => (
+                    <TableCell key={h}>
                       <Skeleton className="h-4 w-full max-w-[9rem]" />
                     </TableCell>
                   ))}
@@ -310,111 +161,70 @@ const PmsCycleList = () => {
                 <TableCell colSpan={HEADERS.length}>
                   <EmptyState
                     icon={CalendarDays}
-                    title={hasFilters ? "No cycles match your filters" : "No appraisal cycles yet"}
-                    description={
-                      hasFilters
-                        ? "Try a different search or clear the filters."
-                        : "Initialize a new appraisal to get started."
-                    }
+                    title="No appraisal cycles"
+                    description="Initialize a new appraisal to get started."
                     action={
-                      hasFilters ? (
-                        <Button variant="outline" onClick={resetFilters}>
-                          <RotateCcw /> Reset filters
-                        </Button>
-                      ) : (
-                        <Button onClick={() => navigate({ to: "/pms/cycle/new" })}>
-                          <Plus /> Initialize New Appraisal
-                        </Button>
-                      )
+                      <Button onClick={() => navigate({ to: "/pms/cycle/new" })}>
+                        <Plus /> Initialize New Appraisal
+                      </Button>
                     }
                   />
                 </TableCell>
               </TableRow>
             ) : (
-              items.map((cycle) => {
-                const editable = cycle.status === "draft" || cycle.status === "active";
-                return (
-                  <TableRow
-                    key={cycle.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => openCycle(cycle)}
-                  >
-                    <TableCell className="font-semibold text-foreground">
-                      {cycle.cycle_code}
-                    </TableCell>
-                    <TableCell className="text-foreground">{cycle.name}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {APPRAISAL_TYPE_LABEL[cycle.type]}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {formatMonthYear(cycle.period_start)} –{" "}
-                      {formatMonthYear(cycle.period_end)}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {cycle.applicable_to}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {formatDisplayDate(cycle.created_on)}
-                    </TableCell>
-                    <TableCell>
-                      <CycleStatusBadge status={cycle.status} />
-                    </TableCell>
-                    <TableCell onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-end gap-1">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label={`View ${cycle.name}`}
-                              onClick={() => openCycle(cycle)}
-                            >
-                              <Eye />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>View</TooltipContent>
-                        </Tooltip>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            {/* span: a disabled button swallows hover, so the tooltip needs a live wrapper */}
-                            <span>
-                              <Button
-                                variant="ghost"
-                                size="icon-sm"
-                                aria-label={`Edit ${cycle.name}`}
-                                disabled={!editable}
-                                onClick={() => openCycle(cycle, true)}
-                              >
-                                <Pencil />
-                              </Button>
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {editable ? "Edit" : `${CYCLE_STATUS_META[cycle.status].label} cycles can't be edited`}
-                          </TooltipContent>
-                        </Tooltip>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+              items.map((cycle) => (
+                <TableRow key={cycle.id}>
+                  <TableCell className="font-medium text-foreground">{cycle.name}</TableCell>
+                  <TableCell className="whitespace-nowrap text-foreground">
+                    {formatDisplayDate(cycle.period_start)} – {formatDisplayDate(cycle.period_end)}
+                  </TableCell>
+                  <TableCell className="text-foreground">{APPRAISAL_TYPE_LABEL[cycle.type]}</TableCell>
+                  <TableCell>
+                    <CycleStatusBadge status={cycle.status} />
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    {cycle.status === "draft" ? (
+                      <>
+                        <button type="button" className={link} onClick={() => openCycle(cycle, true)}>
+                          Edit
+                        </button>
+                        <span className="px-1.5 text-muted-foreground">·</span>
+                        <button
+                          type="button"
+                          className={link}
+                          disabled={publishing}
+                          onClick={() => publish(cycle)}
+                        >
+                          Publish
+                        </button>
+                      </>
+                    ) : cycle.status === "active" ? (
+                      <>
+                        <button type="button" className={link} onClick={() => openCycle(cycle)}>
+                          View
+                        </button>
+                        <span className="px-1.5 text-muted-foreground">·</span>
+                        <button type="button" className={link} onClick={() => openCycle(cycle, true)}>
+                          Edit
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button type="button" className={link} onClick={() => openCycle(cycle)}>
+                          View
+                        </button>
+                        <span className="px-1.5 text-muted-foreground">·</span>
+                        <button type="button" className={link} onClick={() => clone(cycle)}>
+                          Clone
+                        </button>
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
-
-        <TablePagination
-          currentPage={page}
-          totalPages={totalPages}
-          startIndex={(page - 1) * pageSize + 1}
-          endIndex={Math.min(page * pageSize, total)}
-          total={total}
-          pageSize={pageSize}
-          onPageChange={setPage}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setPage(1);
-          }}
-        />
       </div>
     </div>
   );

@@ -7,27 +7,38 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { usePreviewEligibleEmployeesMutation } from "@/store/api/pmsApi";
+import { useEligibilityPreview } from "./useEligibilityPreview";
+import { usePmsDepartments, usePmsPlants } from "../../shared/usePmsLookups";
 import type { PmsCycleApplicability } from "@/types/pms";
-import { EMPLOYMENT_TYPE_OPTIONS } from "../cycle.constants";
+import { EMPLOYMENT_TYPE_LABEL } from "../cycle.constants";
 
+/** Props for the preview dialog. */
 interface EligibleEmployeesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** The rules currently in the form; sent to the preview endpoint when the dialog opens. */
   applicability: PmsCycleApplicability;
 }
 
-const TYPE_LABEL = Object.fromEntries(
-  EMPLOYMENT_TYPE_OPTIONS.map((o) => [o.value, o.label]),
-);
+/** Employment type value to display label. */
+const TYPE_LABEL = EMPLOYMENT_TYPE_LABEL;
 
+/**
+ * "Show Eligible Employees Preview": asks the API who would get goals and who would be rated with the
+ * current rules, and lists them. The call is made once, when the dialog opens.
+ */
 export function EligibleEmployeesDialog({
   open,
   onOpenChange,
   applicability,
 }: EligibleEmployeesDialogProps) {
-  const [preview, { data, isLoading, isError, reset }] =
-    usePreviewEligibleEmployeesMutation();
+  // Plant and department names for the ids the API returns.
+  const { data: plants } = usePmsPlants();
+  const { data: departments } = usePmsDepartments();
+  const plantName = (id?: string) => plants.find((p) => p.id === id)?.name ?? "—";
+  const departmentName = (id?: string) => departments.find((d) => d.id === id)?.name ?? "—";
+  // The employees are read from IAM and the rules applied here: fired on open, cleared on close.
+  const { run: preview, reset, data, isLoading, isError } = useEligibilityPreview();
 
   useEffect(() => {
     if (open) preview(applicability);
@@ -37,9 +48,9 @@ export function EligibleEmployeesDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  // "Excluded: notice period . N" chips, only for reasons that excluded someone.
   const excluded = data
     ? [
-        ["Probation", data.excluded_probation],
         ["Notice period", data.excluded_notice_period],
         ["Below min. service", data.excluded_min_service],
       ].filter(([, n]) => Number(n) > 0)
@@ -72,7 +83,15 @@ export function EligibleEmployeesDialog({
                   <p className="text-2xl font-semibold leading-none tabular-nums text-foreground">
                     {data.total_eligible}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">eligible employees</p>
+                  <p className="mt-1 text-xs text-muted-foreground">get goals</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-xl bg-muted px-4 py-2.5">
+                <div>
+                  <p className="text-2xl font-semibold leading-none tabular-nums text-foreground">
+                    {data.total_rated}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">are rated</p>
                 </div>
               </div>
               {excluded.length > 0 && (
@@ -92,7 +111,7 @@ export function EligibleEmployeesDialog({
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-table-header text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   <tr>
-                    {["Code", "Name", "Department", "Plant", "Type", "Service"].map((h) => (
+                    {["Code", "Name", "Department", "Plant", "Type", "Service", "Rated"].map((h) => (
                       <th key={h} className="px-3 py-2">
                         {h}
                       </th>
@@ -104,19 +123,26 @@ export function EligibleEmployeesDialog({
                     <tr key={emp.employee_id} className="border-t">
                       <td className="px-3 py-2 text-muted-foreground">{emp.employee_code}</td>
                       <td className="px-3 py-2 font-medium text-foreground">{emp.name}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{emp.department}</td>
-                      <td className="px-3 py-2 text-muted-foreground">{emp.plant}</td>
+                      <td className="px-3 py-2 text-muted-foreground">
+                        {emp.department ?? departmentName(emp.department_id)}
+                      </td>
+                      <td className="px-3 py-2 text-muted-foreground">
+                        {emp.plant ?? plantName(emp.plant_id)}
+                      </td>
                       <td className="px-3 py-2 text-muted-foreground">
                         {TYPE_LABEL[emp.employment_type]}
                       </td>
                       <td className="px-3 py-2 text-muted-foreground">
                         {emp.service_months} mo
                       </td>
+                      <td className="px-3 py-2 text-muted-foreground">
+                        {emp.is_rated ? "Yes" : "Goals only"}
+                      </td>
                     </tr>
                   ))}
                   {data.items.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="px-3 py-10 text-center text-muted-foreground">
+                      <td colSpan={7} className="px-3 py-10 text-center text-muted-foreground">
                         No employees match these rules.
                       </td>
                     </tr>

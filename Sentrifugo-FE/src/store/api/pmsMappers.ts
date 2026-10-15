@@ -21,6 +21,7 @@ import type {
 import type {
   PmsCompetency,
   PmsCompetencyCategory,
+  PmsCompetencyType,
   PmsCompetencyUpsert,
   PmsDesignationOption,
   PmsGoalTemplate,
@@ -46,6 +47,7 @@ export interface ApiEnvelope<T> {
   data: T
 }
 
+/** Takes `data` out of a base-query result (for endpoints written as `queryFn`). */
 export const unwrapEnvelope = <T>(res: { data?: unknown }): T => (res.data as ApiEnvelope<T>).data
 
 /** Sentrifugo masters the PMS API refers to by id only. */
@@ -59,30 +61,38 @@ export interface PmsLookups {
 
 /** FE keeps the start year (2026 → FY 2026-27); the API takes "2026-27". */
 export const fyToApi = (year: number) => `${year}-${String((year + 1) % 100).padStart(2, '0')}`
+/** "2026-27" back to the start year (2026). */
 export const fyFromApi = (fy: string) => Number(fy.slice(0, 4))
 
 // ── Cycle DTOs (guide §3) ────────────────────────────────────────────────────
 
+/** Applicability as PMS_Java sends it (nullable fields; `goal_setting` and `appraisal` halves). */
 interface ApiCycleApplicability {
   all_plants: boolean
   plant_ids: string[]
   all_departments: boolean
   department_ids: string[]
-  employment_types: PmsEmploymentType[]
-  min_service_months: number | null
-  service_as_on: string | null
-  exclude_probation: boolean
+  goal_setting: { employment_types: PmsEmploymentType[]; min_service_months: number | null } | null
+  appraisal: {
+    employment_types: PmsEmploymentType[]
+    min_service_months: number | null
+    service_as_on: string | null
+  } | null
   exclude_notice_period: boolean
 }
 
+/** Rating scale and notification switches as PMS_Java sends them. */
 interface ApiCycleFinalize {
   rating_scale_id: string | null
   notify_managers: boolean
   notify_employees: boolean
   notify_hod: boolean
   notify_hr: boolean
+  notify_gp?: boolean
+  approval_workflow_id?: string | null
 }
 
+/** A full cycle as PMS_Java sends it. */
 export interface ApiCycle {
   id: string
   cycle_code: string
@@ -96,20 +106,26 @@ export interface ApiCycle {
   finalize: ApiCycleFinalize | null
 }
 
+/** The activation response: the cycle, publish date and notification counts. */
 export interface ApiCycleActivation {
   cycle: ApiCycle
   published_on: string
   notifications: { audience: PmsNotificationCount['audience']; sent: number }[]
+  eligibility?: { total_eligible: number } | null
 }
 
+/** Used when a draft has no finalize section yet. */
 const EMPTY_FINALIZE: PmsCycleFinalize = {
   rating_scale_id: '',
   notify_managers: false,
   notify_employees: false,
   notify_hod: false,
   notify_hr: false,
+  notify_gp: false,
+  approval_workflow_id: '',
 }
 
+/** API cycle to the form shape. "All plants" is expanded to every plant id so the select shows them ticked. */
 export function cycleFromApi(c: ApiCycle, lookups: PmsLookups): PmsCycle {
   const app = c.applicability
   const applicability: PmsCycleApplicability = {
@@ -117,10 +133,15 @@ export function cycleFromApi(c: ApiCycle, lookups: PmsLookups): PmsCycle {
     plant_ids: app?.all_plants ? lookups.plants.map((p) => p.id) : (app?.plant_ids ?? []),
     all_departments: app?.all_departments ?? false,
     department_ids: app?.department_ids ?? [],
-    employment_types: app?.employment_types ?? [],
-    min_service_months: app?.min_service_months ?? 0,
-    service_as_on: app?.service_as_on ?? '',
-    exclude_probation: app?.exclude_probation ?? false,
+    goal_setting: {
+      employment_types: app?.goal_setting?.employment_types ?? [],
+      min_service_months: app?.goal_setting?.min_service_months ?? 0,
+    },
+    appraisal: {
+      employment_types: app?.appraisal?.employment_types ?? [],
+      min_service_months: app?.appraisal?.min_service_months ?? 0,
+      service_as_on: app?.appraisal?.service_as_on ?? '',
+    },
     exclude_notice_period: app?.exclude_notice_period ?? false,
   }
   const f = c.finalize
@@ -152,22 +173,26 @@ export function cycleFromApi(c: ApiCycle, lookups: PmsLookups): PmsCycle {
           notify_employees: f.notify_employees,
           notify_hod: f.notify_hod,
           notify_hr: f.notify_hr,
+          notify_gp: f.notify_gp ?? false,
+          approval_workflow_id: f.approval_workflow_id ?? '',
         }
       : EMPTY_FINALIZE,
   }
 }
 
+/** API activation response to the frontend shape. */
 export function cycleActivationFromApi(a: ApiCycleActivation, lookups: PmsLookups): PmsCycleActivation {
   return {
     cycle: cycleFromApi(a.cycle, lookups),
     published_on: a.published_on,
     notifications: a.notifications.map((n) => ({ audience: n.audience, sent: n.sent })),
+    eligible: a.eligibility ? a.eligibility.total_eligible : null,
   }
 }
 
 /** FE body → API body. Empty dates and the rating scale go as null, not "". */
 export function cycleToApi(body: PmsCycleUpsert, lookups: PmsLookups) {
-  const { plant_ids, service_as_on, ...app } = body.applicability
+  const { plant_ids, appraisal, ...app } = body.applicability
   // Every plant ticked → all_plants, so new plants added later are picked up.
   const all_plants = lookups.plants.length > 0 && lookups.plants.every((p) => plant_ids.includes(p.id))
   return {
@@ -178,19 +203,27 @@ export function cycleToApi(body: PmsCycleUpsert, lookups: PmsLookups) {
       end_date: s.end_date || null,
       notify: s.notify,
     })),
-    applicability: { ...app, all_plants, plant_ids, service_as_on: service_as_on || null },
+    applicability: {
+      ...app,
+      all_plants,
+      plant_ids,
+      appraisal: { ...appraisal, service_as_on: appraisal.service_as_on || null },
+    },
     finalize: {
       rating_scale_id: body.finalize.rating_scale_id || null,
       notify_managers: body.finalize.notify_managers,
       notify_employees: body.finalize.notify_employees,
       notify_hod: body.finalize.notify_hod,
       notify_hr: body.finalize.notify_hr,
+      notify_gp: body.finalize.notify_gp,
+      approval_workflow_id: body.finalize.approval_workflow_id || null,
     },
   }
 }
 
 // ── Rating scale DTOs (guide §6) ─────────────────────────────────────────────
 
+/** One rating level as PMS_Java sends it. */
 interface ApiRatingLevel {
   rating_value: number
   label: string
@@ -201,6 +234,7 @@ interface ApiRatingLevel {
   display_order: number | null
 }
 
+/** A rating scale as PMS_Java sends it. */
 export interface ApiRatingScale {
   id: string
   name: string
@@ -244,6 +278,7 @@ export interface ApiStandardRatingLevel {
   colour_code: string | null
 }
 
+/** API standard rating level to the frontend shape (default colour when none). */
 export const standardLevelFromApi = (l: ApiStandardRatingLevel): PmsStandardRatingLevel => ({
   id: l.id,
   label: l.label,
@@ -251,6 +286,7 @@ export const standardLevelFromApi = (l: ApiStandardRatingLevel): PmsStandardRati
   color: l.colour_code ?? '#9CA3AF',
 })
 
+/** Frontend standard level to the POST body. */
 export const standardLevelToApi = (b: PmsStandardRatingLevelUpsert) => ({
   label: b.label.trim(),
   definition: b.definition.trim() || null,
@@ -287,8 +323,10 @@ export function ratingScaleToApi(current: ApiRatingScale, body: PmsRatingScaleUp
 
 // ── Masters (guide §5) ───────────────────────────────────────────────────────
 
+/** API KRA to the frontend shape. */
 export const kraFromApi = (k: { id: string; name: string }): PmsKra => ({ id: k.id, name: k.name })
 
+/** A KPI as PMS_Java sends it. */
 export interface ApiKpi {
   id: string
   kra_id: string
@@ -300,6 +338,7 @@ export interface ApiKpi {
   evidence_required: string | null
 }
 
+/** API KPI to the frontend shape. */
 export const kpiFromApi = (k: ApiKpi): PmsKpi => ({
   id: k.id,
   kra_id: k.kra_id,
@@ -311,11 +350,14 @@ export const kpiFromApi = (k: ApiKpi): PmsKpi => ({
   evidence_required: k.evidence_required ?? '',
 })
 
+/** A competency as PMS_Java sends it. */
 export interface ApiCompetency {
   id: string
   name: string
   /** Free text on the server, e.g. "Behavioural". */
   category: string
+  /** Absent from older API versions: an "HR…" category then means an HR competency. */
+  type?: PmsCompetencyType
   status: 'active' | 'inactive'
 }
 
@@ -323,17 +365,20 @@ export const competencyFromApi = (c: ApiCompetency): PmsCompetency => ({
   id: c.id,
   name: c.name,
   category: c.category.toLowerCase() as PmsCompetencyCategory,
+  type: c.type ?? (c.category.toLowerCase().startsWith('hr') ? 'hr' : 'manager'),
   is_active: c.status === 'active',
 })
 
 export const competencyToApi = (b: PmsCompetencyUpsert) => ({
   name: b.name,
   category: b.category.charAt(0).toUpperCase() + b.category.slice(1),
+  type: b.type,
   status: b.is_active ? 'active' : 'inactive',
 })
 
 // ── Goal templates (guide §4) ────────────────────────────────────────────────
 
+/** One KPI of a template as PMS_Java sends it. */
 interface ApiTemplateKpi {
   kpi_id: string
   kpi_name: string
@@ -344,6 +389,7 @@ interface ApiTemplateKpi {
   evidence_required: string | null
 }
 
+/** A full goal template as PMS_Java sends it. */
 export interface ApiGoalTemplate {
   id: string
   financial_year: string
@@ -358,6 +404,7 @@ export interface ApiGoalTemplate {
   competencies: { competency_id: string; name: string; category: string; weightage: number }[]
 }
 
+/** A row of the template list as PMS_Java sends it. */
 export interface ApiGoalTemplateListItem {
   id: string
   template_name: string
@@ -369,6 +416,7 @@ export interface ApiGoalTemplateListItem {
   status: PmsTemplateStatus
 }
 
+/** Name helpers: look an id up in the IAM lookups ("All" for no plant, "" when unknown). */
 const plantName = (lookups: PmsLookups, id: string | null) =>
   id ? (lookups.plants.find((p) => p.id === id)?.name ?? '') : 'All'
 const departmentName = (lookups: PmsLookups, id: string) =>
@@ -376,6 +424,7 @@ const departmentName = (lookups: PmsLookups, id: string) =>
 const designationName = (lookups: PmsLookups, id: string) =>
   lookups.designations.find((d) => d.id === id)?.name ?? ''
 
+/** API template to the wizard shape (ids resolved to department / role / plant names). */
 export function templateFromApi(t: ApiGoalTemplate, lookups: PmsLookups): PmsGoalTemplate {
   return {
     id: t.id,
@@ -405,6 +454,7 @@ export function templateFromApi(t: ApiGoalTemplate, lookups: PmsLookups): PmsGoa
   }
 }
 
+/** API list row to the table row shape. */
 export function templateListItemFromApi(t: ApiGoalTemplateListItem, lookups: PmsLookups): PmsGoalTemplateListItem {
   return {
     id: t.id,

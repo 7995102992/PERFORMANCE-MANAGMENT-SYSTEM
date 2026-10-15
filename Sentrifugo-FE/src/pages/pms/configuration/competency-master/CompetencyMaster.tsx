@@ -24,7 +24,6 @@ import {
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useConfirm } from "@/providers/confirm-dialog-provider";
 import { toast } from "@/lib/toast";
 import {
@@ -44,14 +43,18 @@ import {
   SkeletonRows,
 } from "../../shared/PmsTableCard";
 
+/** Form rules for the competency popup: name, category and type are required. */
 const schema = z.object({
   name: z.string().trim().min(1, "Competency is required").max(120, "Keep it under 120 characters"),
   category: z.enum(["behavioural", "technical", "leadership", "functional"]),
+  type: z.enum(["hr", "manager"]),
   is_active: z.boolean(),
 });
 
-const EMPTY: PmsCompetencyUpsert = { name: "", category: "behavioural", is_active: true };
+/** Blank form for "Add Competency": behavioural, manager-rated, active. */
+const EMPTY: PmsCompetencyUpsert = { name: "", category: "behavioural", type: "manager", is_active: true };
 
+/** Add / edit popup (screen 2.9). `competency` set means edit, null means add. */
 function CompetencyDialog({
   open,
   competency,
@@ -71,16 +74,23 @@ function CompetencyDialog({
     formState: { errors },
   } = useForm<PmsCompetencyUpsert>({ resolver: zodResolver(schema), defaultValues: EMPTY });
 
+  // Each time the popup opens, load the competency (edit) or the blank form (add).
   useEffect(() => {
     if (open) {
       reset(
         competency
-          ? { name: competency.name, category: competency.category, is_active: competency.is_active }
+          ? {
+              name: competency.name,
+              category: competency.category,
+              type: competency.type,
+              is_active: competency.is_active,
+            }
           : EMPTY,
       );
     }
   }, [open, competency, reset]);
 
+  /** Saves the competency (update when editing, create otherwise), then closes the popup. */
   const onSubmit = async (body: PmsCompetencyUpsert) => {
     try {
       if (competency) await update({ id: competency.id, body }).unwrap();
@@ -135,6 +145,25 @@ function CompetencyDialog({
               />
             </div>
             <div className="space-y-1.5">
+              <Label>
+                Competency Type <span className="text-destructive">*</span>
+              </Label>
+              <Controller
+                control={control}
+                name="type"
+                render={({ field }) => (
+                  <RadioGroup className="flex gap-6" value={field.value} onValueChange={field.onChange}>
+                    <Label className="flex cursor-pointer items-center gap-2 font-normal">
+                      <RadioGroupItem value="manager" /> Manager
+                    </Label>
+                    <Label className="flex cursor-pointer items-center gap-2 font-normal">
+                      <RadioGroupItem value="hr" /> HR
+                    </Label>
+                  </RadioGroup>
+                )}
+              />
+            </div>
+            <div className="space-y-1.5">
               <Label>Status</Label>
               <Controller
                 control={control}
@@ -175,17 +204,34 @@ const CompetencyMaster = () => {
   const confirm = useConfirm();
   const { data: competencies = [], isLoading } = useGetPmsCompetenciesQuery();
   const [deleteCompetency] = useDeletePmsCompetencyMutation();
+  const [updateCompetency] = useUpdatePmsCompetencyMutation();
   const [search, setSearch] = useState("");
   const [dialog, setDialog] = useState<{ open: boolean; competency: PmsCompetency | null }>({
     open: false,
     competency: null,
   });
 
+  // Client-side search on the competency name.
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
     return q ? competencies.filter((c) => c.name.toLowerCase().includes(q)) : competencies;
   }, [competencies, search]);
 
+  /** Saves a new Competency Type straight from the row. */
+  const changeType = async (c: PmsCompetency, type: PmsCompetency["type"]) => {
+    if (type === c.type) return;
+    try {
+      await updateCompetency({
+        id: c.id,
+        body: { name: c.name, category: c.category, type, is_active: c.is_active },
+      }).unwrap();
+      toast.success(`${c.name} is now rated by ${type === "hr" ? "HR" : "the manager"}`);
+    } catch (e) {
+      toast.error(e, "Could not change the competency type");
+    }
+  };
+
+  /** Confirms, then deletes the competency. The API refuses when a goal template uses it (409). */
   const handleDelete = (c: PmsCompetency) =>
     confirm({
       title: "Delete competency?",
@@ -237,7 +283,7 @@ const CompetencyMaster = () => {
               <PmsTh className="w-20">S.No</PmsTh>
               <PmsTh>Competency</PmsTh>
               <PmsTh>Category</PmsTh>
-              <PmsTh>Status</PmsTh>
+              <PmsTh>Competency Type</PmsTh>
               <PmsTh className="w-32">Actions</PmsTh>
             </TableRow>
           </TableHeader>
@@ -263,7 +309,16 @@ const CompetencyMaster = () => {
                     {COMPETENCY_CATEGORY_LABEL[c.category]}
                   </TableCell>
                   <TableCell>
-                    <StatusBadge status={c.is_active} />
+                    {/* Competency Type decides who rates it, and can be changed here without opening the popup. */}
+                    <Select value={c.type} onValueChange={(v) => changeType(c, v as PmsCompetency["type"])}>
+                      <SelectTrigger className="w-36" aria-label={`Competency type of ${c.name}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="hr">HR</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </TableCell>
                   <TableCell>
                     <RowActions
@@ -278,6 +333,10 @@ const CompetencyMaster = () => {
           </TableBody>
         </Table>
         <ShowingFooter count={rows.length} noun="competencies" />
+        <p className="px-1 pt-1 text-sm text-muted-foreground">
+          Competency Type decides who rates it: Manager = L1 and L2, HR = Plant HR (Corporate Office: Corporate
+          HR).
+        </p>
       </PmsTableCard>
 
       <CompetencyDialog

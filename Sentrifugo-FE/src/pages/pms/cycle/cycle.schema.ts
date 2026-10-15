@@ -1,7 +1,10 @@
 import { z } from "zod";
+import { validateTimeline } from "./cycle.rules";
 
+/** A required ISO date string; `message` is shown when empty. */
 const iso = (message: string) => z.string().min(1, message);
 
+/** Step 1: name, type and period (end must be after start). */
 export const basicSchema = z.object({
   basic: z
     .object({
@@ -18,11 +21,31 @@ export const basicSchema = z.object({
     .refine((b) => !b.period_start || !b.period_end || b.period_end > b.period_start, {
       path: ["period_end"],
       message: "End date must be after the start date",
+    })
+    // A performance period is at most a year: the end may not be after the day before the next anniversary.
+    .refine((b) => !b.period_start || !b.period_end || b.period_end <= oneYearAfter(b.period_start), {
+      path: ["period_end"],
+      message: "A performance period cannot be longer than 12 months",
     }),
 });
 
-export const timelineSchema = z.object({
-  stages: z.array(
+/** The last day of a 12-month period that starts on `iso` (`2026-04-01` gives `2027-03-31`). */
+function oneYearAfter(iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  // Day 0 of the same month next year is the day before the anniversary.
+  const last = new Date(Date.UTC(y + 1, m - 1, d - 1));
+  return last.toISOString().slice(0, 10);
+}
+
+/**
+ * Step 2: every stage has a start and end date, ends on or after it starts, and the stages follow the
+ * business order without overlapping where they must not (see `validateTimeline`).
+ */
+export const timelineSchema = z
+  .object({
+    // Only the period is read, to check the stage dates against it.
+    basic: z.object({ period_start: z.string().optional(), period_end: z.string().optional() }).optional(),
+    stages: z.array(
     z
       .object({
         stage: z.string(),
@@ -35,24 +58,41 @@ export const timelineSchema = z.object({
         message: "Ends before it starts",
       }),
   ),
-});
+  })
+  .superRefine((value, ctx) => {
+    for (const issue of validateTimeline(value.stages, value.basic?.period_start, value.basic?.period_end)) {
+      ctx.addIssue({ code: "custom", path: ["stages", issue.index, issue.field], message: issue.message });
+    }
+  });
 
+/** At least one employment type from the four the API knows. */
+const employmentTypes = z
+  .array(z.enum(["permanent", "contract", "probationary", "trainee"]))
+  .min(1, "Select at least one employment type");
+
+/** Whole months, 0 to 600. */
+const serviceMonths = z
+  .number({ error: "Enter the minimum service in months" })
+  .int("Whole months only")
+  .min(0, "Cannot be negative")
+  .max(600, "Too large");
+
+/** Step 3: plants, departments, and the goal-setting / appraisal rule halves. */
 export const applicabilitySchema = z.object({
   applicability: z
     .object({
       plant_ids: z.array(z.string()).min(1, "Select at least one plant"),
       all_departments: z.boolean(),
       department_ids: z.array(z.string()),
-      employment_types: z
-        .array(z.enum(["permanent", "contract", "trainee"]))
-        .min(1, "Select at least one employment type"),
-      min_service_months: z
-        .number({ error: "Enter the minimum service in months" })
-        .int("Whole months only")
-        .min(0, "Cannot be negative")
-        .max(600, "Too large"),
-      service_as_on: iso("Select the service cut-off date"),
-      exclude_probation: z.boolean(),
+      goal_setting: z.object({
+        employment_types: employmentTypes,
+        min_service_months: serviceMonths,
+      }),
+      appraisal: z.object({
+        employment_types: employmentTypes,
+        min_service_months: serviceMonths,
+        service_as_on: iso("Select the service cut-off date"),
+      }),
       exclude_notice_period: z.boolean(),
     })
     .refine((a) => a.all_departments || a.department_ids.length > 0, {
@@ -61,6 +101,7 @@ export const applicabilitySchema = z.object({
     }),
 });
 
+/** Step 4: a rating scale and the notification switches. */
 export const finalizeSchema = z.object({
   finalize: z.object({
     rating_scale_id: z.string().min(1, "Select a rating scale"),
@@ -68,6 +109,8 @@ export const finalizeSchema = z.object({
     notify_employees: z.boolean(),
     notify_hod: z.boolean(),
     notify_hr: z.boolean(),
+    notify_gp: z.boolean(),
+    approval_workflow_id: z.string(),
   }),
 });
 

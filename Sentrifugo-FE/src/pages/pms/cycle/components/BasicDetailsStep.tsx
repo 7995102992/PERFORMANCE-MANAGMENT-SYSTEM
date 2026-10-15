@@ -14,23 +14,31 @@ import { APPRAISAL_TYPE_OPTIONS } from "../cycle.constants";
 import { dateToIso, isoToDate } from "../../shared/pms.utils";
 import { FormRow, StepSection } from "../../shared/FormRow";
 
+/** Midnight today: a performance period cannot start or end in the past. */
+const today = () => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
 /** Wizard step 1: cycle name, appraisal type, performance period and description. */
 export function BasicDetailsStep() {
   const {
     register,
     control,
     watch,
+    getValues,
+    setValue,
     formState: { errors },
   } = useFormContext<PmsCycleUpsert>();
+  // Shorthand for this step validation errors.
   const e = errors.basic;
+  // The end-date picker cannot go before the chosen start date.
   const periodStart = watch("basic.period_start");
 
   return (
     <section>
-      <StepSection
-        title="Basic Details"
-        description="Name the cycle and set the performance period it covers."
-      />
+      <StepSection title="Basic Details" />
       <div className="space-y-4">
         <FormRow label="Cycle Name" required htmlFor="cycle-name" error={e?.name?.message}>
           <Input
@@ -83,7 +91,13 @@ export function BasicDetailsStep() {
               render={({ field }) => (
                 <DatePicker
                   value={isoToDate(field.value)}
-                  onChange={(d) => field.onChange(dateToIso(d))}
+                  minDate={today()}
+                  onChange={(d) => {
+                    field.onChange(dateToIso(d));
+                    // A start after the end clears the end so it is picked again.
+                    const end = isoToDate(getValues("basic.period_end"));
+                    if (d && end && end <= d) setValue("basic.period_end", "", { shouldValidate: false });
+                  }}
                   placeholder="Start date"
                 />
               )}
@@ -95,7 +109,7 @@ export function BasicDetailsStep() {
                 <DatePicker
                   value={isoToDate(field.value)}
                   onChange={(d) => field.onChange(dateToIso(d))}
-                  minDate={isoToDate(periodStart)}
+                  minDate={isoToDate(periodStart) && isoToDate(periodStart)! > today() ? isoToDate(periodStart) : today()}
                   placeholder="End date"
                 />
               )}

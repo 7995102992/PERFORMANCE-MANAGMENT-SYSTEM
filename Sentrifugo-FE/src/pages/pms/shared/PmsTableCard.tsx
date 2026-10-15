@@ -38,6 +38,7 @@ export function PmsTh({
   );
 }
 
+/** Class string for the `<tr>` that holds PmsTh cells: rounded grey header band. */
 export const PMS_HEADER_ROW =
   "border-0 bg-table-header hover:bg-table-header [&>th:first-child]:rounded-l-lg [&>th:last-child]:rounded-r-lg";
 

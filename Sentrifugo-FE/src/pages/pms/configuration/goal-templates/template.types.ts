@@ -1,4 +1,4 @@
-import type { PmsTargetType, PmsCompetencyCategory } from "@/types/pms-config";
+import type { PmsTargetType, PmsCompetencyCategory, PmsCompetencyType } from "@/types/pms-config";
 
 /**
  * Form-side shape of a goal template. The API only stores what was *selected*;
@@ -16,6 +16,7 @@ export interface TemplateKpiRow {
   evidence_required: string;
 }
 
+/** One KRA of step 2 with its KPI rows. */
 export interface TemplateKraRow {
   kra_id: string;
   name: string;
@@ -23,14 +24,17 @@ export interface TemplateKraRow {
   kpis: TemplateKpiRow[];
 }
 
+/** One competency of step 3. */
 export interface TemplateCompetencyRow {
   competency_id: string;
   name: string;
   category: PmsCompetencyCategory;
+  type: PmsCompetencyType;
   selected: boolean;
   weight: number;
 }
 
+/** Everything the three wizard steps edit. */
 export interface TemplateFormValues {
   basic: {
     financial_year: number;

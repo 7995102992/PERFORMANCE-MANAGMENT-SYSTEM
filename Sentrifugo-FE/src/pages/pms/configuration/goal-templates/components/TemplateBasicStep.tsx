@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/shared/DatePicker";
-import { useGetPmsDepartmentsQuery, useGetPmsDesignationsQuery } from "@/store/api/pmsApi";
+import { usePmsDepartments, usePmsDesignations } from "../../../shared/usePmsLookups";
 import { FormRow, StepSection } from "../../../shared/FormRow";
 import { dateToIso, financialYearLabel, isoToDate } from "../../../shared/pms.utils";
 import { financialYearOptions } from "../../config.constants";
@@ -29,14 +29,13 @@ export function TemplateBasicStep() {
     setValue,
     formState: { errors },
   } = useFormContext<TemplateFormValues>();
+  // Shorthand for this step validation errors.
   const e = errors.basic;
+  // The selected department decides which designations are offered.
   const departmentId = watch("basic.department_id");
 
-  const { data: departments = [] } = useGetPmsDepartmentsQuery();
-  const { data: designations = [], isFetching: loadingDesignations } = useGetPmsDesignationsQuery(
-    departmentId,
-    { skip: !departmentId },
-  );
+  const { data: departments } = usePmsDepartments();
+  const { data: designations, isFetching: loadingDesignations } = usePmsDesignations(departmentId);
 
   return (
     <section>

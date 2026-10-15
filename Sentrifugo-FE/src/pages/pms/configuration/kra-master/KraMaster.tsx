@@ -34,9 +34,11 @@ import {
   SkeletonRows,
 } from "../../shared/PmsTableCard";
 
+/** Form rules for the KRA popup: name required, 100 characters at most. */
 const schema = z.object({
   name: z.string().trim().min(1, "KRA is required").max(100, "Keep it under 100 characters"),
 });
+/** Shape of the KRA popup form. */
 type FormValues = z.infer<typeof schema>;
 
 /** Add / edit popup (screen 2.6). `kra` set → edit. */
@@ -51,6 +53,7 @@ function KraDialog({
   existing: PmsKra[];
   onOpenChange: (open: boolean) => void;
 }) {
+  // Create and update mutations; their loading flags disable the Save button.
   const [create, { isLoading: creating }] = useCreatePmsKraMutation();
   const [update, { isLoading: updating }] = useUpdatePmsKraMutation();
   const {
@@ -61,10 +64,12 @@ function KraDialog({
     formState: { errors },
   } = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { name: "" } });
 
+  // Each time the popup opens, load the KRA name (edit) or clear the field (add).
   useEffect(() => {
     if (open) reset({ name: kra?.name ?? "" });
   }, [open, kra, reset]);
 
+  /** Saves the KRA (update when editing, create otherwise), then closes the popup. API errors show as a toast. */
   const onSubmit = async ({ name }: FormValues) => {
     // Cheap pre-check; the API's 409 stays the source of truth.
     if (existing.some((k) => k.id !== kra?.id && k.name.toLowerCase() === name.toLowerCase())) {
@@ -118,11 +123,13 @@ const KraMaster = () => {
   const confirm = useConfirm();
   const { data: kras = [], isLoading } = useGetPmsKrasQuery();
   const [deleteKra] = useDeletePmsKraMutation();
+  // Popup state: which KRA is being edited (null = add).
   const [dialog, setDialog] = useState<{ open: boolean; kra: PmsKra | null }>({
     open: false,
     kra: null,
   });
 
+  /** Confirms, then deletes the KRA. The API refuses when KPIs are still mapped to it (409). */
   const handleDelete = (kra: PmsKra) =>
     confirm({
       title: "Delete KRA?",

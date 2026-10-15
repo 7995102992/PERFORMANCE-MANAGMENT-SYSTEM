@@ -2,11 +2,17 @@ import type { ReactNode } from "react";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
+/** Props for FormRow. */
 interface FormRowProps {
+  /** Text of the left-hand label. */
   label: string;
+  /** Shows the red asterisk after the label. */
   required?: boolean;
+  /** Id of the control the label belongs to. */
   htmlFor?: string;
+  /** Helper text under the control; hidden while an error is shown. */
   hint?: string;
+  /** Validation message, shown in red under the control. */
   error?: string;
   children: ReactNode;
   className?: string;

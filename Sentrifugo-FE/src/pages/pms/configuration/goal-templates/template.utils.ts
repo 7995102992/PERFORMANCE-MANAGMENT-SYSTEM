@@ -10,8 +10,10 @@ import { dateToIso } from "../../shared/pms.utils";
 import { currentFinancialYear } from "../config.constants";
 import type { TemplateFormValues } from "./template.types";
 
+/** Tolerance when comparing a weight total with 100 (decimals add up with rounding noise). */
 export const WEIGHT_EPSILON = 0.01;
 
+/** Sum of the weights of the ticked rows (empty weights count as 0). */
 export const sumWeights = (rows: { selected: boolean; weight: number }[]) =>
   rows.filter((r) => r.selected).reduce((total, r) => total + (Number(r.weight) || 0), 0);
 
@@ -72,11 +74,18 @@ export function buildFormValues(
         competency_id: c.id,
         name: c.name,
         category: c.category,
+        type: c.type,
         selected: template ? !!saved : true,
         weight: saved?.weight ?? (template ? 0 : defaults[i]),
       };
     }),
   };
+}
+
+/** The ticked competencies with 100 split equally among them (8, 8, 7, 7, ...). */
+function shareEqually<T extends { competency_id: string }>(rows: T[]): (T & { weight: number })[] {
+  const split = distributeEqually(rows.length);
+  return rows.map((r, i) => ({ ...r, weight: split[i] }));
 }
 
 /** Form values → API body, keeping only what the user selected. */
@@ -97,8 +106,10 @@ export function toApiBody(values: TemplateFormValues, status: PmsTemplateStatus)
             evidence_required,
           })),
       })),
-    competencies: values.competencies
-      .filter((c) => c.selected)
-      .map((c) => ({ competency_id: c.competency_id, weight: Number(c.weight) || 0 })),
+    // The mockup has no weight column: the competencies share 100 equally.
+    competencies: shareEqually(values.competencies.filter((c) => c.selected)).map((c) => ({
+      competency_id: c.competency_id,
+      weight: c.weight,
+    })),
   };
 }

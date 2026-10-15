@@ -21,14 +21,19 @@ import { WeightInput } from "./WeightInput";
  * Goal template step 2 (screen 2.3): choose KRAs, then KPIs under each KRA, with a weightage and target
  * type per KPI. The KPI weightages must total 100 before the template can be saved as active; a draft
  * may be saved with any total.
+ *
+ * `readOnly` (the view-only route) disables the ticks and inputs one by one. The wizard does not wrap this
+ * step in a disabled fieldset, because that would also disable the KRA headers and the KPIs could not be
+ * opened to read.
  */
-export function TemplateKraKpiStep() {
+export function TemplateKraKpiStep({ readOnly = false }: { readOnly?: boolean }) {
   const {
     control,
     register,
     setValue,
     formState: { errors },
   } = useFormContext<TemplateFormValues>();
+  // Live list of KRAs (each with its KPI rows) from the form.
   const kras = useWatch({ control, name: "kras" });
 
   // Open the first ticked KRA so the KPI grid is visible on arrival.
@@ -37,6 +42,7 @@ export function TemplateKraKpiStep() {
     return new Set(first ? [first.kra_id] : []);
   });
 
+  /** Expands or collapses one KRA panel. */
   const toggleOpen = (id: string) =>
     setOpen((prev) => {
       const next = new Set(prev);
@@ -44,6 +50,7 @@ export function TemplateKraKpiStep() {
       return next;
     });
 
+  /** Ticks or unticks a KRA together with all its KPIs, and opens its panel when ticked. */
   const setKraSelected = (i: number, checked: boolean) => {
     setValue(`kras.${i}.selected`, checked, { shouldDirty: true, shouldValidate: true });
     // Ticking a KRA takes all its KPIs along; unticking clears them.
@@ -53,11 +60,13 @@ export function TemplateKraKpiStep() {
     if (checked) setOpen((prev) => new Set(prev).add(kras[i].kra_id));
   };
 
+  /** Ticks or unticks one KPI; ticking a KPI also ticks its KRA. */
   const setKpiSelected = (i: number, j: number, checked: boolean) => {
     setValue(`kras.${i}.kpis.${j}.selected`, checked, { shouldDirty: true, shouldValidate: true });
     if (checked && !kras[i].selected) setValue(`kras.${i}.selected`, true, { shouldDirty: true });
   };
 
+  // Header checkbox state, running weight total, and the list-level validation message.
   const allSelected = kras.length > 0 && kras.every((k) => k.selected);
   const someSelected = kras.some((k) => k.selected);
   const total = sumWeights(kras.filter((k) => k.selected).flatMap((k) => k.kpis));
@@ -76,6 +85,7 @@ export function TemplateKraKpiStep() {
           <Checkbox
             checked={allSelected ? true : someSelected ? "indeterminate" : false}
             onCheckedChange={(c) => kras.forEach((_, i) => setKraSelected(i, c === true))}
+            disabled={readOnly}
             aria-label="Select all KRAs"
           />
           <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -98,6 +108,7 @@ export function TemplateKraKpiStep() {
                 <Checkbox
                   checked={kra.selected}
                   onCheckedChange={(c) => setKraSelected(i, c === true)}
+                  disabled={readOnly}
                   aria-label={`Select ${kra.name}`}
                 />
                 <button
@@ -155,6 +166,7 @@ export function TemplateKraKpiStep() {
                                 <Checkbox
                                   checked={kpi.selected}
                                   onCheckedChange={(c) => setKpiSelected(i, j, c === true)}
+                                  disabled={readOnly}
                                   aria-label={`Select ${kpi.name}`}
                                 />
                               </td>
@@ -174,7 +186,7 @@ export function TemplateKraKpiStep() {
                                     <WeightInput
                                       value={field.value}
                                       onChange={field.onChange}
-                                      disabled={!kpi.selected}
+                                      disabled={readOnly || !kpi.selected}
                                       invalid={!!ke?.weight}
                                       label={`Weight for ${kpi.name}`}
                                     />
@@ -194,7 +206,7 @@ export function TemplateKraKpiStep() {
                                     <Select
                                       value={field.value}
                                       onValueChange={field.onChange}
-                                      disabled={!kpi.selected}
+                                      disabled={readOnly || !kpi.selected}
                                     >
                                       <SelectTrigger className="w-32" aria-label={`Target type for ${kpi.name}`}>
                                         <SelectValue />
@@ -213,7 +225,7 @@ export function TemplateKraKpiStep() {
                               <td className="px-3 py-3 text-muted-foreground">{kpi.unit}</td>
                               <td className="px-3 py-2">
                                 <Input
-                                  disabled={!kpi.selected}
+                                  disabled={readOnly || !kpi.selected}
                                   aria-label={`Expected outcome for ${kpi.name}`}
                                   aria-invalid={!!ke?.expected_outcome}
                                   {...register(`kras.${i}.kpis.${j}.expected_outcome`)}
@@ -226,7 +238,7 @@ export function TemplateKraKpiStep() {
                               </td>
                               <td className="px-3 py-2">
                                 <Input
-                                  disabled={!kpi.selected}
+                                  disabled={readOnly || !kpi.selected}
                                   aria-label={`Evidence for ${kpi.name}`}
                                   aria-invalid={!!ke?.evidence_required}
                                   {...register(`kras.${i}.kpis.${j}.evidence_required`)}

@@ -42,16 +42,16 @@ import { toast } from "@/lib/toast";
 import {
   useDeletePmsTemplateMutation,
   useDuplicatePmsTemplateMutation,
-  useGetPmsDepartmentsQuery,
-  useGetPmsPlantsQuery,
   useGetPmsTemplatesQuery,
   useSetPmsTemplateStatusMutation,
 } from "@/store/api/pmsApi";
 import type { PmsGoalTemplateListItem } from "@/types/pms-config";
+import { usePmsDepartments, usePmsPlants } from "../../shared/usePmsLookups";
 import { PMS_HEADER_ROW, PmsTableCard, PmsTh, SkeletonRows } from "../../shared/PmsTableCard";
 import { financialYearLabel } from "../../shared/pms.utils";
 import { currentFinancialYear, financialYearOptions } from "../config.constants";
 
+/** Value of every "All ..." filter option. */
 const ALL = "all";
 
 /** Screen 2.1 — Goal Templates. */
@@ -59,13 +59,16 @@ const GoalTemplateList = () => {
   const navigate = useNavigate();
   const confirm = useConfirm();
 
+  // Filters. The year is the financial year start; the others default to "all".
   const [year, setYear] = useState(currentFinancialYear());
   const [plant, setPlant] = useState(ALL);
   const [department, setDepartment] = useState(ALL);
   const [search, setSearch] = useState("");
   const [copyOpen, setCopyOpen] = useState(false);
+  // Search waits 300 ms after the last keystroke before calling the API.
   const debouncedSearch = useDebouncedValue(search, 300);
 
+  // Query parameters for the list call; "all" becomes undefined.
   const params = useMemo(
     () => ({
       financial_year: year,
@@ -76,15 +79,20 @@ const GoalTemplateList = () => {
     [year, plant, department, debouncedSearch],
   );
 
+  // Templates for the filters; plants and departments feed the filter dropdowns.
   const { data: templates = [], isLoading, isFetching } = useGetPmsTemplatesQuery(params);
-  const { data: plants = [] } = useGetPmsPlantsQuery();
-  const { data: departments = [] } = useGetPmsDepartmentsQuery();
+  const { data: plants } = usePmsPlants();
+  const { data: departments } = usePmsDepartments();
+  // Row actions: activate / deactivate, duplicate and delete mutations.
   const [setStatus] = useSetPmsTemplateStatusMutation();
   const [duplicate] = useDuplicatePmsTemplateMutation();
   const [remove] = useDeletePmsTemplateMutation();
 
+  // True when any filter is applied (controls the "Clear filters" button and the empty message).
   const hasFilters = plant !== ALL || department !== ALL || search !== "";
+  /** Opens the wizard for a new template. */
   const create = () => navigate({ to: "/pms/configuration/goal-templates/new" });
+  /** Opens a template: the edit wizard when `edit` is true, otherwise the read-only view. */
   const open = (t: PmsGoalTemplateListItem, edit = false) =>
     navigate({
       to: edit
@@ -93,6 +101,7 @@ const GoalTemplateList = () => {
       params: { templateId: t.id },
     });
 
+  /** Activates or deactivates a template. The API refuses an incomplete template or a second active one for the same role (409). */
   const changeStatus = async (t: PmsGoalTemplateListItem, status: "active" | "inactive") => {
     try {
       await setStatus({ id: t.id, status }).unwrap();
@@ -102,6 +111,7 @@ const GoalTemplateList = () => {
     }
   };
 
+  /** Creates a draft copy named "<name> (Copy)" with the same KRAs, KPIs and competencies. */
   const handleDuplicate = async (t: PmsGoalTemplateListItem) => {
     try {
       await duplicate(t.id).unwrap();
@@ -111,6 +121,7 @@ const GoalTemplateList = () => {
     }
   };
 
+  /** Confirms, then deletes the template (goals already set from it are not affected). */
   const handleDelete = (t: PmsGoalTemplateListItem) =>
     confirm({
       title: "Delete template?",

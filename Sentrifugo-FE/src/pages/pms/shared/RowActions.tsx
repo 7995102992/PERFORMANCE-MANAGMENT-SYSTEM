@@ -2,16 +2,20 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
+/** Props for RowActions. */
 interface RowActionsProps {
   /** Used in aria-labels, e.g. the KRA name. */
   subject: string;
+  /** Called when the pencil is clicked. */
   onEdit: () => void;
+  /** Called when the bin is clicked (callers confirm before deleting). */
   onDelete: () => void;
 }
 
 /** Edit (pencil) + delete (red bin) pair used by every master table. */
 export function RowActions({ subject, onEdit, onDelete }: RowActionsProps) {
   return (
+    // The wrapper stops the click so a row-level click handler (if any) is not triggered by these buttons.
     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
       <Tooltip>
         <TooltipTrigger asChild>

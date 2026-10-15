@@ -28,6 +28,8 @@ import {
   FileText,
   UserCog,
   Archive,
+  TrendingUp,
+  SlidersHorizontal,
 } from "lucide-react";
 
 export type Permission = string;
@@ -176,35 +178,46 @@ export const sidebarMenuConfig: MenuSection[] = [
         key: "pms",
         label: "PMS Cycle",
         icon: CalendarRange,
-        // TEMPORARY: moduleKey/permission removed from every item below so PMS
-        // shows for every login while the module is being rolled out. Each item
-        // is still meant to be gated by its performance_management permission
-        // code (seeded in IAM) — restore `moduleKey: "performance_management",
-        // permission: "<code>"` on each item below once logins are separated.
+        // Every item is gated by the performance_management permission code the super admin granted to the
+        // user's role(s). A user holding several roles (a manager who is also an employee, an HOD who is also
+        // a manager) gets the union of their grants; the group hides when no item survives. Super admins and
+        // org admins see everything, as in the other modules.
+        moduleKey: "performance_management",
         children: [
           {
             key: "pms-configuration",
             label: "Configuration",
             icon: Settings,
             children: [
-              { key: "pms-goal-templates", label: "Goal Templates", path: "/pms/configuration/goal-templates", icon: ListChecks },
-              { key: "pms-kra-master", label: "KRA Master", path: "/pms/configuration/kra-master", icon: Target },
-              { key: "pms-kpi-master", label: "KPI Master", path: "/pms/configuration/kpi-master", icon: ListChecks },
-              { key: "pms-competency-master", label: "Competency Master", path: "/pms/configuration/competency-master", icon: Star },
-              { key: "pms-rating-scale", label: "Rating Scale", path: "/pms/configuration/rating-scale", icon: ListFilter },
+              { key: "pms-goal-templates", label: "Goal Templates", path: "/pms/configuration/goal-templates", icon: ListChecks, permission: "goal_template" },
+              { key: "pms-kra-master", label: "KRA Master", path: "/pms/configuration/kra-master", icon: Target, permission: "kra_master" },
+              { key: "pms-kpi-master", label: "KPI Master", path: "/pms/configuration/kpi-master", icon: ListChecks, permission: "kpi_master" },
+              { key: "pms-competency-master", label: "Competency Master", path: "/pms/configuration/competency-master", icon: Star, permission: "competency_master" },
+              { key: "pms-rating-scale", label: "Rating Scale", path: "/pms/configuration/rating-scale", icon: ListFilter, permission: "rating_scale" },
+              { key: "pms-approval-workflow", label: "Approval Workflow", path: "/pms/configuration/approval-workflow", icon: SlidersHorizontal, permission: "pms_cycle" },
             ],
           },
-          { key: "pms-initiate-appraisal", label: "Initiate Appraisal", path: "/pms/cycle", icon: Zap },
-          { key: "pms-my-goals", label: "My Goals", path: `/pms/my-goals/${currentFinancialYear()}`, icon: Target },
-          { key: "pms-self-appraisal", label: "Self Appraisal", path: "/pms/self-appraisal", icon: User },
-          { key: "pms-team-goal-setting", label: "Team Goal Setting", path: `/pms/team-goal-setting/${currentFinancialYear()}`, icon: CheckCircle2 },
-          { key: "pms-goal-approvals", label: "Goal Approvals", path: `/pms/goal-approvals/${currentFinancialYear()}`, icon: CheckCircle2 },
-          { key: "pms-target-revisions", label: "Target Revisions", path: "/pms/target-revisions", icon: RefreshCw },
-          { key: "pms-mid-year-review", label: "Mid-Year Review", path: "/pms/mid-year-review", icon: Flag },
-          { key: "pms-team-appraisal", label: "Team Appraisal", path: "/pms/team-appraisal", icon: CalendarCheck },
-          { key: "pms-appraisal-history", label: "Appraisal History", path: "/pms/appraisal-history", icon: FileText },
-          { key: "pms-lock-access", label: "Lock Access", path: "/pms/lock-access", icon: UserCog },
-          { key: "pms-cycle-closure", label: "Cycle Closure", path: "/pms/cycle-closure", icon: Archive },
+          { key: "pms-initiate-appraisal", label: "Initiate Appraisal", path: "/pms/cycle", icon: Zap, permission: "pms_cycle" },
+          // Employee
+          { key: "pms-my-goals", label: "My Goals", path: `/pms/my-goals/${currentFinancialYear()}`, icon: Target, permission: "my_goals" },
+          { key: "pms-my-progress", label: "Progress Update", path: `/pms/my-progress/${currentFinancialYear()}`, icon: BarChart3, permission: "progress" },
+          { key: "pms-self-appraisal", label: "Self Appraisal", path: `/pms/self-appraisal/${currentFinancialYear()}`, icon: User, permission: "self_appraisal" },
+          // Manager
+          { key: "pms-team-goal-setting", label: "My Team Goals", path: `/pms/team-goal-setting/${currentFinancialYear()}`, icon: CheckCircle2, permission: "team_goals" },
+          { key: "pms-team-progress", label: "Team Progress", path: `/pms/team-progress/${currentFinancialYear()}`, icon: TrendingUp, permission: "team_progress" },
+          { key: "pms-mid-year-review", label: "Mid-Year Review", path: `/pms/mid-year-review/${currentFinancialYear()}`, icon: Flag, permission: "mid_year_review" },
+          // HOD
+          { key: "pms-goal-approvals", label: "Goal Approvals", path: `/pms/goal-approvals/${currentFinancialYear()}`, icon: CheckCircle2, permission: "goal_approval" },
+          { key: "pms-target-revisions", label: "Target Revisions", path: "/pms/target-revisions", icon: RefreshCw, permission: "target_revision" },
+          { key: "pms-team-appraisal", label: "Team Appraisal", path: `/pms/team-appraisal/${currentFinancialYear()}`, icon: CalendarCheck, permission: "team_appraisal" },
+          { key: "pms-approve-appraisal", label: "Approve Appraisal", path: "/pms/approve-appraisal", icon: FileText, permission: "appraisal_review" },
+          // Corporate HR. The API gates both on `rating_normalization`.
+          { key: "pms-hr-competency-rating", label: "HR Competency Rating", path: `/pms/hr-competency-rating/${currentFinancialYear()}`, icon: Star, permission: "rating_normalization" },
+          { key: "pms-calibration", label: "Calibration", path: `/pms/calibration/${currentFinancialYear()}`, icon: SlidersHorizontal, permission: "rating_normalization" },
+          { key: "pms-status-tracker", label: "Status Tracker", path: "/pms/status-tracker", icon: TrendingUp, permission: "pms_cycle" },
+          { key: "pms-appraisal-history", label: "Appraisal History", path: "/pms/appraisal-history", icon: FileText, permission: "appraisal_history" },
+          { key: "pms-lock-access", label: "Lock Access", path: "/pms/lock-access", icon: UserCog, permission: "pms_cycle" },
+          { key: "pms-cycle-closure", label: "Close Cycle", path: "/pms/cycle-closure", icon: Archive, permission: "cycle_closure" },
         ],
       },
       {

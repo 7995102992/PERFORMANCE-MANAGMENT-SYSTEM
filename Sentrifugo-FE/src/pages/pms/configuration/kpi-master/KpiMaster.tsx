@@ -45,6 +45,7 @@ import {
   SkeletonRows,
 } from "../../shared/PmsTableCard";
 
+/** Form rules for the KPI popup: KRA, name, unit and target type are required; texts are length-limited. */
 const schema = z.object({
   kra_id: z.string().min(1, "Select a KRA"),
   name: z.string().trim().min(1, "KPI is required").max(120, "Keep it under 120 characters"),
@@ -54,6 +55,7 @@ const schema = z.object({
   evidence_required: z.string().trim().max(200, "Keep it under 200 characters"),
 });
 
+/** Blank form for "Add KPI". */
 const EMPTY: PmsKpiUpsert = {
   kra_id: "",
   name: "",
@@ -63,6 +65,7 @@ const EMPTY: PmsKpiUpsert = {
   evidence_required: "",
 };
 
+/** Red validation message under a field (renders nothing without a message). */
 function FieldError({ message }: { message?: string }) {
   return message ? (
     <p role="alert" className="text-xs text-destructive">
@@ -93,10 +96,12 @@ function KpiDialog({
     formState: { errors },
   } = useForm<PmsKpiUpsert>({ resolver: zodResolver(schema), defaultValues: EMPTY });
 
+  // Each time the popup opens, load the KPI (edit) or the blank form (add).
   useEffect(() => {
     if (open) reset(kpi ? { ...kpi } : EMPTY);
   }, [open, kpi, reset]);
 
+  /** Saves the KPI (update when editing, create otherwise), then closes the popup. */
   const onSubmit = async (body: PmsKpiUpsert) => {
     try {
       if (kpi) await update({ id: kpi.id, body }).unwrap();
@@ -239,11 +244,13 @@ const KpiMaster = () => {
   const confirm = useConfirm();
   const { data: kpis = [], isLoading } = useGetPmsKpisQuery();
   const [deleteKpi] = useDeletePmsKpiMutation();
+  // Popup state: which KPI is being edited (null = add).
   const [dialog, setDialog] = useState<{ open: boolean; kpi: PmsKpi | null }>({
     open: false,
     kpi: null,
   });
 
+  /** Confirms, then deletes the KPI. The API refuses when a goal template uses it (409). */
   const handleDelete = (kpi: PmsKpi) =>
     confirm({
       title: "Delete KPI?",

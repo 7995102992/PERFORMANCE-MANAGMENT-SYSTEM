@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Controller, FormProvider, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus } from "lucide-react";
+import { Eye, MoreVertical, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { FinancialYearTag } from "../../shared/FinancialYearTag";
+import { currentFinancialYear } from "../config.constants";
 import { ColorPicker } from "@/components/shared/ColorPicker";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageLoader } from "@/components/shared/PageLoader";
@@ -30,9 +38,11 @@ import {
 import type { PmsRatingScaleUpdate } from "@/types/pms-config";
 import { PMS_HEADER_ROW, PmsTableCard, PmsTh } from "../../shared/PmsTableCard";
 
+/** A score: a number from 0 to 100. */
 const score = (message: string) =>
   z.number({ error: message }).min(0, "Cannot be negative").max(100, "Too large");
 
+/** Rules for the scale form: each level needs a label and a colour; ranges must not overlap. */
 const schema = z.object({
   levels: z
     .array(
@@ -67,16 +77,8 @@ const schema = z.object({
   show_definitions_to_employees: z.boolean(),
 });
 
+/** Shows a score with two decimals ("" for an invalid number). */
 const fmt = (n: number) => (Number.isFinite(n) ? n.toFixed(2) : "");
-
-/** Starting levels for a new scale: the standard five-point design. */
-const STANDARD_LEVELS: PmsRatingScaleUpdate["levels"] = [
-  { rating: 5, label: "Outstanding", definition: "Exceptional performance, consistently exceeds expectations", score_min: 4.5, score_max: 5, color: "#16A34A" },
-  { rating: 4, label: "Exceeds Expectations", definition: "Consistently above expectations", score_min: 3.5, score_max: 4.49, color: "#2563EB" },
-  { rating: 3, label: "Meets Expectations", definition: "Fully meets expectations", score_min: 2.5, score_max: 3.49, color: "#6366F1" },
-  { rating: 2, label: "Needs Improvement", definition: "Partially meets expectations", score_min: 1.5, score_max: 2.49, color: "#D97706" },
-  { rating: 1, label: "Unsatisfactory", definition: "Does not meet expectations", score_min: 1, score_max: 1.49, color: "#DC2626" },
-];
 
 /** Screen 2.10 — Rating Scale. */
 const RatingScale = () => {
@@ -84,6 +86,7 @@ const RatingScale = () => {
   const { data: scales = [], isLoading } = useGetPmsRatingScaleConfigsQuery();
   const [update, { isLoading: saving }] = useUpdatePmsRatingScaleMutation();
   const [createScale, { isLoading: creatingNow }] = useCreatePmsRatingScaleMutation();
+  // Selected scale id, create-mode flag and name, and the combined saving flag.
   const [pickedId, setPickedId] = useState<string>("");
   // Create mode: a blank scale with a name, using the standard levels as a start.
   const [creating, setCreating] = useState(false);
@@ -93,6 +96,7 @@ const RatingScale = () => {
   // The default scale opens first; the user can switch below.
   const scale = scales.find((s) => s.id === pickedId) ?? scales.find((s) => s.is_default) ?? scales[0];
 
+  // Form for the levels of the scale on screen.
   const form = useForm<PmsRatingScaleUpdate>({
     resolver: zodResolver(schema),
     mode: "onChange",
@@ -106,8 +110,10 @@ const RatingScale = () => {
     formState: { errors, isDirty },
   } = form;
 
+  // Warns before leaving with unsaved changes; releaseGuard() is called before intentional navigation.
   const releaseGuard = useNavigationGuard(isDirty);
 
+  // Load the scale into the form whenever the shown scale changes (not while creating a new one).
   useEffect(() => {
     if (scale && !creating) {
       reset({
@@ -122,6 +128,7 @@ const RatingScale = () => {
   const [addOpen, setAddOpen] = useState(false);
   const startCreate = () => setAddOpen(true);
 
+  /** Saves: creates a new scale when in create mode, otherwise updates the shown one, then reloads the form from the response. */
   const onSubmit = async (body: PmsRatingScaleUpdate) => {
     if (creating) {
       if (!newName.trim()) {
@@ -151,6 +158,25 @@ const RatingScale = () => {
       toast.success("Rating scale saved");
     } catch (e) {
       toast.error(e, "Could not save the rating scale");
+    }
+  };
+
+  /** Makes a scale the default for new cycles, keeping its levels as they are. */
+  const makeDefault = async (id: string) => {
+    const target = scales.find((x) => x.id === id);
+    if (!target) return;
+    try {
+      await update({
+        id,
+        body: {
+          levels: target.levels,
+          is_default: true,
+          show_definitions_to_employees: target.show_definitions_to_employees,
+        },
+      }).unwrap();
+      toast.success(`${target.name} is now the default scale`);
+    } catch (e) {
+      toast.error(e, "Could not set the default scale");
     }
   };
 
@@ -186,10 +212,13 @@ const RatingScale = () => {
         subtitle="Define rating levels, labels and score ranges used in appraisals"
         action={
           !creating ? (
-            <Button type="button" onClick={startCreate}>
-              <Plus className="mr-2 size-4" />
-              Create Rating Scale
-            </Button>
+            <div className="flex items-center gap-3">
+              <FinancialYearTag fy={String(currentFinancialYear())} />
+              <Button type="button" onClick={startCreate}>
+                <Plus className="mr-2 size-4" />
+                Add Scale
+              </Button>
+            </div>
           ) : undefined
         }
       />
@@ -203,6 +232,7 @@ const RatingScale = () => {
                 <th className="px-4 py-2.5 text-left">Levels</th>
                 <th className="px-4 py-2.5 text-left">Default</th>
                 <th className="px-4 py-2.5 text-left">Status</th>
+                <th className="px-4 py-2.5 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -216,6 +246,40 @@ const RatingScale = () => {
                   <td className="px-4 py-2.5">{s.levels.length}</td>
                   <td className="px-4 py-2.5">{s.is_default ? "Yes" : "—"}</td>
                   <td className="px-4 py-2.5">{s.status === "inactive" ? "Inactive" : "Active"}</td>
+                  <td className="px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`View ${s.name}`}
+                        onClick={() => setPickedId(s.id)}
+                      >
+                        <Eye />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label={`Edit ${s.name}`}
+                        onClick={() => setPickedId(s.id)}
+                      >
+                        <Pencil />
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button type="button" variant="ghost" size="icon-sm" aria-label={`More actions for ${s.name}`}>
+                            <MoreVertical />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem disabled={s.is_default} onClick={() => makeDefault(s.id)}>
+                            Set as default
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -422,6 +486,7 @@ function ScoreInput({
   label: string;
   invalid: boolean;
 }) {
+  // Text being typed; null means "show the formatted number".
   const [draft, setDraft] = useState<string | null>(null);
   return (
     <Input
@@ -430,6 +495,7 @@ function ScoreInput({
       aria-label={label}
       aria-invalid={invalid}
       value={draft ?? fmt(value)}
+      // Start the draft from what is on screen so focusing never rewrites the text.
       onFocus={(e) => {
         // Start the draft from what is on screen so focusing never rewrites the text.
         setDraft(fmt(value));

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -14,35 +14,25 @@ import { fyToApi } from "@/store/api/pmsMappers";
 import { useCopyPmsTemplatesMutation, useGetPmsCopyPreviewQuery } from "@/store/api/pmsApi";
 import { currentFinancialYear } from "../config.constants";
 
-/** Screen 2.2 "Copy Template": copies every template of a previous year into the target year as drafts. */
-const CopyTemplateDialog = ({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) => {
+/** The form inside the dialog; it mounts each time the dialog opens, so the years start at their defaults. */
+const CopyTemplateForm = ({ onOpenChange }: { onOpenChange: (open: boolean) => void }) => {
+  // Target and source financial-year start years chosen in the dialog.
   const [targetStart, setTargetStart] = useState(currentFinancialYear());
   const [previousStart, setPreviousStart] = useState(currentFinancialYear() - 1);
   const [copy, { isLoading: copying }] = useCopyPmsTemplatesMutation();
 
-  // Reset to the defaults each time the dialog opens.
-  useEffect(() => {
-    if (open) {
-      setTargetStart(currentFinancialYear());
-      setPreviousStart(currentFinancialYear() - 1);
-    }
-  }, [open]);
-
+  // API form of the two years ("2026-27") and the selectable years.
   const previousYear = fyToApi(previousStart);
   const targetYear = fyToApi(targetStart);
   const years = [currentFinancialYear() - 2, currentFinancialYear() - 1, currentFinancialYear(), currentFinancialYear() + 1];
 
+  // How many templates would be copied vs skipped; not requested while both years are the same.
   const { data: preview, isFetching } = useGetPmsCopyPreviewQuery(
     { previousYear, targetYear },
-    { skip: !open || previousStart === targetStart },
+    { skip: previousStart === targetStart },
   );
 
+  /** Runs the copy and reports how many templates were copied and skipped. */
   const submit = async () => {
     if (previousStart === targetStart) {
       toast.error("Choose a different target year");
@@ -57,6 +47,7 @@ const CopyTemplateDialog = ({
     }
   };
 
+  /** Small financial-year dropdown used for both the source and the target year. */
   const yearSelect = (id: string, value: number, onChange: (n: number) => void) => (
     <select
       id={id}
@@ -71,7 +62,6 @@ const CopyTemplateDialog = ({
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Copy Template</DialogTitle>
@@ -82,11 +72,11 @@ const CopyTemplateDialog = ({
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label htmlFor="copy-prev">Previous year *</Label>
+            <Label htmlFor="copy-prev">Previous Year *</Label>
             {yearSelect("copy-prev", previousStart, setPreviousStart)}
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="copy-target">Target year *</Label>
+            <Label htmlFor="copy-target">Target Year *</Label>
             {yearSelect("copy-target", targetStart, setTargetStart)}
           </div>
         </div>
@@ -108,8 +98,20 @@ const CopyTemplateDialog = ({
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
   );
 };
+
+/** Screen 2.2 "Copy Template": copies every template of a previous year into the target year as drafts. */
+const CopyTemplateDialog = ({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    {open && <CopyTemplateForm onOpenChange={onOpenChange} />}
+  </Dialog>
+);
 
 export default CopyTemplateDialog;

@@ -133,15 +133,32 @@ import CycleActivated from "./pages/pms/cycle/CycleActivated";
 import GoalTemplateList from "./pages/pms/configuration/goal-templates/GoalTemplateList";
 import GoalTemplateWizard from "./pages/pms/configuration/goal-templates/GoalTemplateWizard";
 import KraMaster from "./pages/pms/configuration/kra-master/KraMaster";
+import ApprovalWorkflow from "./pages/pms/configuration/approval-workflow/ApprovalWorkflow";
 import KpiMaster from "./pages/pms/configuration/kpi-master/KpiMaster";
 import CompetencyMaster from "./pages/pms/configuration/competency-master/CompetencyMaster";
 import RatingScale from "./pages/pms/configuration/rating-scale/RatingScale";
 import TeamGoalSettingPage from "./pages/pms/goal-setting/TeamGoalSettingPage";
+import TeamGoalStatusPage from "./pages/pms/goal-setting/TeamGoalStatusPage";
 import SelectRoleTemplatePage from "./pages/pms/goal-setting/SelectRoleTemplatePage";
 import TargetAssignmentPage from "./pages/pms/goal-setting/TargetAssignmentPage";
 import MyGoalsPage from "./pages/pms/goal-setting/MyGoalsPage";
 import GoalApprovalsPage from "./pages/pms/goal-setting/GoalApprovalsPage";
 import GoalReviewPage from "./pages/pms/goal-setting/GoalReviewPage";
+import ApprovalHistoryPage from "./pages/pms/goal-setting/ApprovalHistoryPage";
+import ApprovalTrailPage from "./pages/pms/goal-setting/ApprovalTrailPage";
+import ReviseReturnedGoalsPage from "./pages/pms/goal-setting/ReviseReturnedGoalsPage";
+import TransferredKrasPage from "./pages/pms/goal-setting/TransferredKrasPage";
+import TeamProgressPage from "./pages/pms/progress/TeamProgressPage";
+import MidYearTeamPage from "./pages/pms/mid-year/MidYearTeamPage";
+import MidYearReviewPage from "./pages/pms/mid-year/MidYearReviewPage";
+import TargetRevisionRequestPage from "./pages/pms/mid-year/TargetRevisionRequestPage";
+import TeamAppraisalPage from "./pages/pms/appraisal/TeamAppraisalPage";
+import ManagerAppraisalPage from "./pages/pms/appraisal/ManagerAppraisalPage";
+import HrCompetencyRatingPage from "./pages/pms/hr/HrCompetencyRatingPage";
+import HrCompetencyEmployeePage from "./pages/pms/hr/HrCompetencyEmployeePage";
+import CalibrationPage from "./pages/pms/hr/CalibrationPage";
+import MyProgressPage from "./pages/pms/employee/MyProgressPage";
+import SelfAppraisalPage from "./pages/pms/employee/SelfAppraisalPage";
 import PmsComingSoon from "./pages/pms/PmsComingSoon";
 
 // Settings
@@ -844,29 +861,51 @@ const pmsGoalTemplateNewRoute = pmsRoute("/pms/configuration/goal-templates/new"
 const pmsGoalTemplateViewRoute = pmsRoute("/pms/configuration/goal-templates/$templateId", () => <GoalTemplateWizard readOnly />);
 const pmsGoalTemplateEditRoute = pmsRoute("/pms/configuration/goal-templates/$templateId/edit", () => <GoalTemplateWizard />);
 const pmsKraMasterRoute = pmsRoute("/pms/configuration/kra-master", () => <KraMaster />);
+const pmsApprovalWorkflowRoute = pmsRoute("/pms/configuration/approval-workflow", () => <ApprovalWorkflow />);
 const pmsKpiMasterRoute = pmsRoute("/pms/configuration/kpi-master", () => <KpiMaster />);
 const pmsCompetencyMasterRoute = pmsRoute("/pms/configuration/competency-master", () => <CompetencyMaster />);
 const pmsRatingScaleRoute = pmsRoute("/pms/configuration/rating-scale", () => <RatingScale />);
 
 // Manager goal setting (3.1 - 3.5). The financial year is in the path, e.g. /pms/team-goal-setting/2026.
 const pmsTeamGoalSettingRoute = pmsRoute("/pms/team-goal-setting/$fy", () => <TeamGoalSettingPage />);
+const pmsTeamGoalStatusRoute = pmsRoute("/pms/team-goal-setting/$fy/status", () => <TeamGoalStatusPage />);
 const pmsSelectRoleTemplateRoute = pmsRoute("/pms/team-goal-setting/$fy/role", () => <SelectRoleTemplatePage />);
 const pmsEmployeeTargetsRoute = pmsRoute("/pms/team-goal-setting/$fy/employee/$employeeUserId", () => <TargetAssignmentPage />);
+
+// Manager: returned / transferred goal sheets (3.7, 3.8), progress (3.9), mid-year review (3.10 - 3.12), appraisal (3.13, 3.14).
+const pmsReviseGoalsRoute = pmsRoute("/pms/team-goal-setting/$fy/employee/$employeeUserId/revise", () => <ReviseReturnedGoalsPage />);
+const pmsTransferGoalsRoute = pmsRoute("/pms/team-goal-setting/$fy/employee/$employeeUserId/transfer", () => <TransferredKrasPage />);
+const pmsTeamProgressRoute = pmsRoute("/pms/team-progress/$fy", () => <TeamProgressPage />);
+const pmsMidYearTeamRoute = pmsRoute("/pms/mid-year-review/$fy", () => <MidYearTeamPage />);
+const pmsMidYearReviewRoute = pmsRoute("/pms/mid-year-review/$fy/employee/$employeeUserId", () => <MidYearReviewPage />);
+const pmsTargetRevisionRoute = pmsRoute("/pms/mid-year-review/$fy/employee/$employeeUserId/revision", () => <TargetRevisionRequestPage />);
+const pmsTeamAppraisalRoute = pmsRoute("/pms/team-appraisal/$fy", () => <TeamAppraisalPage />);
+const pmsManagerAppraisalRoute = pmsRoute("/pms/team-appraisal/$fy/employee/$employeeUserId", () => <ManagerAppraisalPage />);
 
 // Employee goal review (4.x) and HOD approval (5.x).
 const pmsMyGoalsRoute = pmsRoute("/pms/my-goals/$fy", () => <MyGoalsPage />);
 const pmsGoalApprovalsRoute = pmsRoute("/pms/goal-approvals/$fy", () => <GoalApprovalsPage />);
-const pmsGoalReviewRoute = pmsRoute("/pms/goal-approvals/$fy/employee/$employeeUserId", () => <GoalReviewPage />);
+const pmsGoalReviewRoute = pmsRoute("/pms/goal-approvals/$fy/review/$requestType/$employeeUserId", () => <GoalReviewPage />);
+const pmsApprovalHistoryRoute = pmsRoute("/pms/goal-approvals/$fy/history", () => <ApprovalHistoryPage />);
+const pmsApprovalTrailRoute = pmsRoute("/pms/goal-approvals/$fy/trail/$employeeUserId", () => <ApprovalTrailPage />);
+
+// Corporate HR: HR competency rating (1.7, 1.8) and calibration & publish (1.9).
+const pmsHrRatingRoute = pmsRoute("/pms/hr-competency-rating/$fy", () => <HrCompetencyRatingPage />);
+const pmsHrRatingEmployeeRoute = pmsRoute("/pms/hr-competency-rating/$fy/employee/$employeeUserId", () => <HrCompetencyEmployeePage />);
+const pmsCalibrationRoute = pmsRoute("/pms/calibration/$fy", () => <CalibrationPage />);
+
+// Employee: progress update (4.4) and self appraisal (4.6).
+const pmsMyProgressRoute = pmsRoute("/pms/my-progress/$fy", () => <MyProgressPage />);
+const pmsSelfAppraisalRoute = pmsRoute("/pms/self-appraisal/$fy", () => <SelfAppraisalPage />);
 
 // Menu entries whose screens are not designed yet.
 const pmsPlaceholderRoutes = [
-  "self-appraisal",
   "target-revisions",
-  "mid-year-review",
-  "team-appraisal",
   "appraisal-history",
   "lock-access",
   "cycle-closure",
+  "approve-appraisal",
+  "status-tracker",
 ].map((slug) => pmsRoute(`/pms/${slug}`, () => <PmsComingSoon />));
 
 const announcementsRoute = createRoute({
@@ -1160,15 +1199,32 @@ const routeTree = rootRoute.addChildren([
     pmsGoalTemplateViewRoute,
     pmsGoalTemplateEditRoute,
     pmsKraMasterRoute,
+    pmsApprovalWorkflowRoute,
     pmsKpiMasterRoute,
     pmsCompetencyMasterRoute,
     pmsRatingScaleRoute,
     pmsTeamGoalSettingRoute,
+    pmsTeamGoalStatusRoute,
     pmsSelectRoleTemplateRoute,
     pmsMyGoalsRoute,
     pmsGoalApprovalsRoute,
+    pmsMyProgressRoute,
+    pmsSelfAppraisalRoute,
+    pmsHrRatingRoute,
+    pmsHrRatingEmployeeRoute,
+    pmsCalibrationRoute,
     pmsGoalReviewRoute,
+    pmsApprovalHistoryRoute,
+    pmsApprovalTrailRoute,
     pmsEmployeeTargetsRoute,
+    pmsReviseGoalsRoute,
+    pmsTransferGoalsRoute,
+    pmsTeamProgressRoute,
+    pmsMidYearTeamRoute,
+    pmsMidYearReviewRoute,
+    pmsTargetRevisionRoute,
+    pmsTeamAppraisalRoute,
+    pmsManagerAppraisalRoute,
     ...pmsPlaceholderRoutes,
     announcementsRoute,
     announcementDetailRoute,

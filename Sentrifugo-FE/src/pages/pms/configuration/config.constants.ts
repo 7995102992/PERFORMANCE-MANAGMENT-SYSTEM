@@ -1,5 +1,6 @@
 import type { PmsCompetencyCategory, PmsTargetType } from "@/types/pms-config";
 
+/** Competency category value to display label. */
 export const COMPETENCY_CATEGORY_LABEL: Record<PmsCompetencyCategory, string> = {
   behavioural: "Behavioural",
   technical: "Technical",
@@ -7,11 +8,13 @@ export const COMPETENCY_CATEGORY_LABEL: Record<PmsCompetencyCategory, string> = 
   functional: "Functional",
 };
 
+/** KPI target type value to display label (individual or common). */
 export const TARGET_TYPE_LABEL: Record<PmsTargetType, string> = {
   individual: "Individual",
   common: "Common",
 };
 
+/** Route of the goal template list; wizard exits go here. */
 export const GOAL_TEMPLATES_PATH = "/pms/configuration/goal-templates";
 
 /** Current financial year start (April–March). */

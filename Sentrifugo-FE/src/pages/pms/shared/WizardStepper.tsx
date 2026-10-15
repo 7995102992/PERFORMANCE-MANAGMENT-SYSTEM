@@ -3,10 +3,15 @@ import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StepperStep } from "@/components/ui/stepper";
 
+/** Props for WizardStepper. */
 interface WizardStepperProps {
+  /** Ordered steps; `id` is the 0-based position. */
   steps: StepperStep[];
+  /** `id` of the step on screen. */
   current: number;
+  /** `id`s of steps the user has already passed (shown with a tick). */
   completed: Set<number>;
+  /** Called with a step id when a reachable step is clicked. */
   onStepClick?: (id: number) => void;
 }
 
@@ -24,6 +29,7 @@ export function WizardStepper({
   return (
     <ol className="flex w-full items-start">
       {steps.map((step, i) => {
+        // done: finished and not the one on screen; active: the one on screen; reachable: may be clicked.
         const done = completed.has(step.id) && current !== step.id;
         const active = current === step.id;
         const reachable = done || step.id < current;
@@ -56,6 +62,7 @@ export function WizardStepper({
                 {step.label}
               </span>
             </li>
+            {/* Connector line to the next step; filled once this step is passed. */}
             {i < steps.length - 1 && (
               <li
                 aria-hidden

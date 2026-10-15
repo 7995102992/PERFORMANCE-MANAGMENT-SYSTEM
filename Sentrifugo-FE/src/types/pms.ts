@@ -7,22 +7,25 @@
 
 export type PmsCycleStatus = 'draft' | 'active' | 'closed' | 'cancelled'
 
+/** annual, mid_year or custom: what the cycle covers. */
 export type PmsAppraisalType = 'annual' | 'mid_year' | 'custom'
 
-export type PmsEmploymentType = 'permanent' | 'contract' | 'trainee'
+/** Employment types the rules can include. The wizard offers permanent, probationary and trainee. */
+export type PmsEmploymentType = 'permanent' | 'contract' | 'probationary' | 'trainee'
 
 /** Stages of a cycle, in process-flow order. Fixed set — the BE owns the keys. */
 export type PmsStageKey =
   | 'goal_setting'
   | 'employee_acknowledgement'
   | 'hod_approval'
-  | 'progress_tracking'
-  | 'mid_year_review'
   | 'self_appraisal'
   | 'manager_appraisal'
   | 'hod_review'
+  | 'hr_competency_rating'
   | 'calibration_final_approval'
+  | 'approval_publish'
 
+/** Step 1 of the cycle wizard. */
 export interface PmsCycleBasicDetails {
   name: string
   description: string
@@ -31,6 +34,7 @@ export interface PmsCycleBasicDetails {
   period_end: string
 }
 
+/** One row of the timeline (step 2). */
 export interface PmsCycleStage {
   stage: PmsStageKey
   start_date: string
@@ -39,25 +43,60 @@ export interface PmsCycleStage {
   notify: boolean
 }
 
+/** "Goal Setting – who gets goals". */
+export interface PmsGoalSettingApplicability {
+  employment_types: PmsEmploymentType[]
+  min_service_months: number
+}
+
+/** "Appraisal – who is rated". Self rating, manager rating and final rating. */
+export interface PmsAppraisalApplicability {
+  employment_types: PmsEmploymentType[]
+  min_service_months: number
+  /** The minimum service must be complete on or before this date. */
+  service_as_on: string
+}
+
+/** Step 3: plants, departments and the two rule halves (who gets goals, who is rated). */
 export interface PmsCycleApplicability {
   plant_ids: string[]
   /** true → every department; `department_ids` is then ignored. */
   all_departments: boolean
   department_ids: string[]
-  employment_types: PmsEmploymentType[]
-  min_service_months: number
-  /** Date the minimum-service rule is evaluated against. */
-  service_as_on: string
-  exclude_probation: boolean
+  goal_setting: PmsGoalSettingApplicability
+  appraisal: PmsAppraisalApplicability
   exclude_notice_period: boolean
 }
 
+/** Step 4: the rating scale and who is notified on publish. */
 export interface PmsCycleFinalize {
   rating_scale_id: string
   notify_managers: boolean
   notify_employees: boolean
   notify_hod: boolean
   notify_hr: boolean
+  /** "Notify GP" (screen 1.5). */
+  notify_gp: boolean
+  /** The approval workflow picked on screen 1.5; "" when none. */
+  approval_workflow_id: string
+}
+
+/** Body to add / edit an approval workflow. */
+export interface PmsApprovalWorkflowUpsert {
+  name: string
+  description: string
+  steps: string[]
+  status: 'active' | 'inactive'
+}
+
+/** An approval workflow of the Approval Workflow master. */
+export interface PmsApprovalWorkflow {
+  id: string
+  name: string
+  description: string | null
+  /** Approver labels in order. */
+  steps: string[]
+  status: 'active' | 'inactive'
 }
 
 /** Body of POST /pms/cycles and PUT /pms/cycles/{id}. */
@@ -94,6 +133,7 @@ export interface PmsCycle extends PmsCycleUpsert {
   applicable_to: string
 }
 
+/** Counts per status for the list stat cards. */
 export interface PmsCycleSummary {
   all: number
   draft: number
@@ -102,6 +142,7 @@ export interface PmsCycleSummary {
   cancelled: number
 }
 
+/** Filters and paging of the cycle list. */
 export interface PmsCycleListParams {
   search?: string
   /** Financial year start, e.g. 2026 → FY 2026-27. */
@@ -120,6 +161,7 @@ export interface PmsCycleListResponse {
   summary: PmsCycleSummary
 }
 
+/** How many notifications went to one audience on publish. */
 export interface PmsNotificationCount {
   audience: 'hod_reviewers' | 'reporting_managers' | 'employees' | 'hr'
   sent: number
@@ -130,6 +172,8 @@ export interface PmsCycleActivation {
   cycle: PmsCycle
   published_on: string
   notifications: PmsNotificationCount[]
+  /** Employees found eligible for appraisal; null until the eligibility run has recorded a result. */
+  eligible: number | null
 }
 
 // ── Lookups ──────────────────────────────────────────────────────────────────
@@ -139,12 +183,14 @@ export interface PmsLookupOption {
   name: string
 }
 
+/** One level of a rating scale (value, label, description). */
 export interface PmsRatingLevel {
   value: number
   label: string
   description?: string
 }
 
+/** A rating scale as offered in the cycle wizard. */
 export interface PmsRatingScale {
   id: string
   name: string
@@ -157,15 +203,24 @@ export interface PmsEligibleEmployee {
   employee_id: string
   employee_code: string
   name: string
-  department: string
-  plant: string
+  /** Names (filled by the preview dialog from the lookups, or by the static mock). */
+  department?: string
+  plant?: string
+  /** Ids as the API sends them. */
+  department_id?: string
+  plant_id?: string
   employment_type: PmsEmploymentType
   service_months: number
+  /** false → gets goals, but the self-rating section stays closed. */
+  is_rated: boolean
 }
 
+/** Result of the eligibility preview (step 3). */
 export interface PmsEligibilityPreview {
+  /** Employees who get goals. */
   total_eligible: number
-  excluded_probation: number
+  /** Of those, how many are also rated. */
+  total_rated: number
   excluded_notice_period: number
   excluded_min_service: number
   /** First page only — the dialog is a preview, not a roster. */

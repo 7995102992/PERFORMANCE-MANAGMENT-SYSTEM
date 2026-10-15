@@ -7,6 +7,7 @@ export function isoToDate(iso?: string | null): Date | undefined {
   return Number.isNaN(d.getTime()) ? undefined : d;
 }
 
+/** Local Date → ISO `YYYY-MM-DD` ("" for undefined), the format every PMS API field uses. */
 export function dateToIso(date?: Date): string {
   return date ? format(date, "yyyy-MM-dd") : "";
 }

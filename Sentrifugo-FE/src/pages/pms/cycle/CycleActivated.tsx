@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageLoader } from "@/components/shared/PageLoader";
@@ -12,12 +12,17 @@ import type { PmsNotificationCount } from "@/types/pms";
 import { PMS_CYCLE_LIST_PATH } from "./cycle.constants";
 import { formatDisplayDate } from "../shared/pms.utils";
 
-const AUDIENCE_LABEL: Record<PmsNotificationCount["audience"], string> = {
-  hod_reviewers: "HOD / Reviewers",
-  reporting_managers: "Reporting Managers",
-  employees: "Employees",
-  hr: "HR",
-};
+/** The rows of the mockup, in order: label and the audience whose count it shows. */
+const NOTIFICATION_ROWS: { label: string; audience: PmsNotificationCount["audience"] }[] = [
+  { label: "Plant Heads and Plant HR", audience: "hr" },
+  { label: "Functional Heads", audience: "hod_reviewers" },
+  { label: "Section Heads", audience: "reporting_managers" },
+  { label: "Employees (goals)", audience: "employees" },
+];
+
+/** A count, or a dash while nothing has been recorded for it. */
+const count = (value: number | null | undefined) =>
+  value === null || value === undefined ? "—" : value.toLocaleString("en-IN");
 
 /** Screen 1.6 — confirmation shown after a cycle is published. */
 const CycleActivated = () => {
@@ -31,6 +36,7 @@ const CycleActivated = () => {
     return () => void dispatch(setBreadcrumbDetail(null));
   }, [data, dispatch]);
 
+  /** Back to the cycle list. */
   const goToList = () => navigate({ to: PMS_CYCLE_LIST_PATH });
 
   if (isLoading) return <PageLoader message="Loading…" />;
@@ -63,31 +69,25 @@ const CycleActivated = () => {
               <span className="text-left">Notification</span>
               <span className="text-right">Sent</span>
             </div>
-            {data.notifications.map((n) => (
+            {NOTIFICATION_ROWS.map((row) => (
               <div
-                key={n.audience}
+                key={row.audience}
                 className="grid grid-cols-[1fr_6rem] border-t px-4 py-3 text-foreground"
               >
-                <span className="text-left">{AUDIENCE_LABEL[n.audience]}</span>
+                <span className="text-left">{row.label}</span>
                 <span className="text-right font-medium tabular-nums">
-                  {n.sent.toLocaleString("en-IN")}
+                  {count(data.notifications.find((n) => n.audience === row.audience)?.sent)}
                 </span>
               </div>
             ))}
+            <div className="grid grid-cols-[1fr_6rem] border-t px-4 py-3 text-foreground">
+              <span className="text-left">Employees eligible for appraisal</span>
+              <span className="text-right font-medium tabular-nums">{count(data.eligible)}</span>
+            </div>
           </div>
 
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <Button
-              variant="outline"
-              onClick={() =>
-                navigate({ to: "/pms/cycle/$cycleId", params: { cycleId } })
-              }
-            >
-              View Cycle
-            </Button>
-            <Button onClick={goToList}>
-              Back to PMS Cycle <ArrowRight />
-            </Button>
+            <Button onClick={goToList}>Back to PMS Cycle</Button>
           </div>
         </div>
       </div>

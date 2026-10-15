@@ -3,6 +3,7 @@ import { Hourglass } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 
+/** Page title per menu slug (the last part of the URL). */
 const TITLES: Record<string, string> = {
   "my-goals": "My Goals",
   "self-appraisal": "Self Appraisal",
@@ -12,7 +13,9 @@ const TITLES: Record<string, string> = {
   "team-appraisal": "Team Appraisal",
   "appraisal-history": "Appraisal History",
   "lock-access": "Lock Access",
-  "cycle-closure": "Cycle Closure",
+  "cycle-closure": "Close Cycle",
+  "approve-appraisal": "Approve Appraisal",
+  "status-tracker": "Status Tracker",
 };
 
 /** Stand-in for PMS menu entries whose screens are not built yet. */

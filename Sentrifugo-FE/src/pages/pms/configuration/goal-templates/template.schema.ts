@@ -1,11 +1,13 @@
 import { z } from "zod";
 import { sumWeights, WEIGHT_EPSILON } from "./template.utils";
 
+/** A weight: a number from 0 to 100. */
 const weightField = z
   .number({ error: "Enter a number" })
   .min(0, "Cannot be negative")
   .max(100, "Max 100");
 
+/** Step 1 rules: year, name, department, role and effective date are required. */
 export const templateBasicSchema = z.object({
   basic: z.object({
     financial_year: z.number({ error: "Select a financial year" }),
@@ -18,6 +20,7 @@ export const templateBasicSchema = z.object({
   }),
 });
 
+/** Step 2 rules: at least one KRA with a KPI; each KRA needs a KPI; total KPI weight must be 100. */
 export const templateKraKpiSchema = z.object({
   kras: z
     .array(
@@ -68,6 +71,7 @@ export const templateKraKpiSchema = z.object({
     }),
 });
 
+/** Step 3 rule: at least one competency. There are no weights: the API shares 100 equally among them. */
 export const templateCompetencySchema = z.object({
   competencies: z
     .array(
@@ -75,6 +79,7 @@ export const templateCompetencySchema = z.object({
         competency_id: z.string(),
         name: z.string(),
         category: z.string(),
+        type: z.enum(["hr", "manager"]),
         selected: z.boolean(),
         weight: weightField,
       }),
@@ -84,19 +89,6 @@ export const templateCompetencySchema = z.object({
       if (selected.length === 0) {
         ctx.addIssue({ code: "custom", path: [], message: "Select at least one competency" });
         return;
-      }
-      rows.forEach((row, i) => {
-        if (row.selected && !(row.weight > 0)) {
-          ctx.addIssue({ code: "custom", path: [i, "weight"], message: "Enter a weight" });
-        }
-      });
-      const total = sumWeights(selected);
-      if (Math.abs(total - 100) > WEIGHT_EPSILON) {
-        ctx.addIssue({
-          code: "custom",
-          path: [],
-          message: `Competency weightage must total 100% (currently ${+total.toFixed(2)}%)`,
-        });
       }
     }),
 });

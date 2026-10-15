@@ -21,16 +21,20 @@ import type {
 } from '@/types/pms-config'
 import { MOCK_DEPARTMENTS } from './pmsCycleMock'
 
+/** Throws the `{ status, data }` shape the RTK error handlers read. */
 const fail = (status: number, code: string, detail: string): never => {
   throw { status, data: { detail, code } }
 }
 
+/** A unique-enough id for a new mock record. */
 const uid = (prefix: string) => `${prefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`
 
+/** Case-insensitive name comparison for duplicate checks. */
 const sameName = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase()
 
 // ── KRA ──────────────────────────────────────────────────────────────────────
 
+/** In-memory KRA master. */
 let kras: PmsKra[] = [
   'Production Efficiency',
   'Energy Management',
@@ -41,8 +45,10 @@ let kras: PmsKra[] = [
   'People Development',
 ].map((name, i) => ({ id: `kra-${i + 1}`, name }))
 
+/** All KRAs. */
 export const mockListKras = (): PmsKra[] => kras
 
+/** Adds a KRA (409 on a duplicate name). */
 export function mockCreateKra(body: PmsKraUpsert): PmsKra {
   if (kras.some((k) => sameName(k.name, body.name))) {
     fail(409, 'PMS_KRA_DUPLICATE', 'A KRA with this name already exists')
@@ -52,6 +58,7 @@ export function mockCreateKra(body: PmsKraUpsert): PmsKra {
   return kra
 }
 
+/** Renames a KRA (409 on a duplicate name). */
 export function mockUpdateKra(id: string, body: PmsKraUpsert): PmsKra {
   if (kras.some((k) => k.id !== id && sameName(k.name, body.name))) {
     fail(409, 'PMS_KRA_DUPLICATE', 'A KRA with this name already exists')
@@ -62,6 +69,7 @@ export function mockUpdateKra(id: string, body: PmsKraUpsert): PmsKra {
   return updated
 }
 
+/** Deletes a KRA (409 while KPIs are mapped to it). */
 export function mockDeleteKra(id: string): void {
   if (kpis.some((k) => k.kra_id === id)) {
     fail(409, 'PMS_KRA_IN_USE', 'This KRA has KPIs mapped to it. Remove or move those KPIs first')
@@ -71,8 +79,10 @@ export function mockDeleteKra(id: string): void {
 
 // ── KPI ──────────────────────────────────────────────────────────────────────
 
+/** Units offered in the KPI form. */
 export const MOCK_KPI_UNITS = ['TPD', 'kcal/kg', '%', 'kWh/t', 'Count', 'Months', 'MPa', 'MT', 'Days', 'INR Lakhs']
 
+/** Builds one seeded KPI. */
 const seedKpi = (
   n: number,
   kra: string,
@@ -86,6 +96,7 @@ const seedKpi = (
   return { id: `kpi-${n}`, kra_id: k.id, kra_name: k.name, name, unit, target_type, expected_outcome, evidence_required }
 }
 
+/** In-memory KPI master. */
 let kpis: PmsKpi[] = [
   seedKpi(1, 'Production Efficiency', 'Clinker production', 'TPD', 'common', 'Sustain planned output', 'DCS report'),
   seedKpi(2, 'Energy Management', 'Specific heat consumption', 'kcal/kg', 'common', 'Reduce fuel use', 'Energy audit'),
@@ -96,8 +107,10 @@ let kpis: PmsKpi[] = [
   seedKpi(7, 'Quality', 'Cement strength consistency', 'MPa', 'common', 'Consistent 28-day strength', 'QC lab report'),
 ]
 
+/** All KPIs. */
 export const mockListKpis = (): PmsKpi[] => kpis
 
+/** Form body to a stored KPI. */
 function toKpi(id: string, body: PmsKpiUpsert): PmsKpi {
   const kra = kras.find((k) => k.id === body.kra_id)
   if (!kra) fail(422, 'PMS_KRA_NOT_FOUND', 'Selected KRA does not exist')
@@ -113,6 +126,7 @@ function toKpi(id: string, body: PmsKpiUpsert): PmsKpi {
   }
 }
 
+/** Adds a KPI. */
 export function mockCreateKpi(body: PmsKpiUpsert): PmsKpi {
   if (kpis.some((k) => k.kra_id === body.kra_id && sameName(k.name, body.name))) {
     fail(409, 'PMS_KPI_DUPLICATE', 'This KRA already has a KPI with that name')
@@ -122,6 +136,7 @@ export function mockCreateKpi(body: PmsKpiUpsert): PmsKpi {
   return kpi
 }
 
+/** Updates a KPI. */
 export function mockUpdateKpi(id: string, body: PmsKpiUpsert): PmsKpi {
   if (kpis.some((k) => k.id !== id && k.kra_id === body.kra_id && sameName(k.name, body.name))) {
     fail(409, 'PMS_KPI_DUPLICATE', 'This KRA already has a KPI with that name')
@@ -131,6 +146,7 @@ export function mockUpdateKpi(id: string, body: PmsKpiUpsert): PmsKpi {
   return kpi
 }
 
+/** Deletes a KPI (409 while a template uses it). */
 export function mockDeleteKpi(id: string): void {
   if (templates.some((t) => t.kras.some((k) => k.kpis.some((p) => p.kpi_id === id)))) {
     fail(409, 'PMS_KPI_IN_USE', 'This KPI is used in a goal template and cannot be deleted')
@@ -140,6 +156,15 @@ export function mockDeleteKpi(id: string): void {
 
 // ── Competency ───────────────────────────────────────────────────────────────
 
+/** Competencies rated by Corporate HR; the rest are manager competencies. */
+const HR_COMPETENCY_NAMES = [
+  'Attendance and Punctuality',
+  'Discipline',
+  'Honesty and Integrity',
+  'Co-employee relations at work (Teamwork)',
+]
+
+/** In-memory competency master. */
 let competencies: PmsCompetency[] = [
   'Attendance and Punctuality',
   'Discipline',
@@ -155,10 +180,19 @@ let competencies: PmsCompetency[] = [
   'Cost consciousness',
   'Consistency at work',
   'Enthusiasm & Creativity at work',
-].map((name, i) => ({ id: `comp-${i + 1}`, name, category: 'behavioural', is_active: true }))
+].map((name, i) => ({
+  id: `comp-${i + 1}`,
+  name,
+  category: 'behavioural' as const,
+  // Rated by Corporate HR: attendance, discipline, honesty and teamwork. The rest are manager competencies.
+  type: HR_COMPETENCY_NAMES.includes(name) ? ('hr' as const) : ('manager' as const),
+  is_active: true,
+}))
 
+/** All competencies. */
 export const mockListCompetencies = (): PmsCompetency[] => competencies
 
+/** Adds a competency (409 on a duplicate name). */
 export function mockCreateCompetency(body: PmsCompetencyUpsert): PmsCompetency {
   if (competencies.some((c) => sameName(c.name, body.name))) {
     fail(409, 'PMS_COMPETENCY_DUPLICATE', 'A competency with this name already exists')
@@ -168,6 +202,7 @@ export function mockCreateCompetency(body: PmsCompetencyUpsert): PmsCompetency {
   return comp
 }
 
+/** Updates a competency (409 on a duplicate name). */
 export function mockUpdateCompetency(id: string, body: PmsCompetencyUpsert): PmsCompetency {
   if (competencies.some((c) => c.id !== id && sameName(c.name, body.name))) {
     fail(409, 'PMS_COMPETENCY_DUPLICATE', 'A competency with this name already exists')
@@ -177,6 +212,7 @@ export function mockUpdateCompetency(id: string, body: PmsCompetencyUpsert): Pms
   return comp
 }
 
+/** Deletes a competency (409 while a template uses it). */
 export function mockDeleteCompetency(id: string): void {
   if (templates.some((t) => t.competencies.some((c) => c.competency_id === id))) {
     fail(409, 'PMS_COMPETENCY_IN_USE', 'This competency is used in a goal template and cannot be deleted')
@@ -186,6 +222,7 @@ export function mockDeleteCompetency(id: string): void {
 
 // ── Rating scales ────────────────────────────────────────────────────────────
 
+/** Builds one rating level of a seeded scale. */
 const level = (
   rating: number,
   label: string,
@@ -195,6 +232,7 @@ const level = (
   color: string,
 ) => ({ rating, label, definition, score_min, score_max, color })
 
+/** In-memory rating scales. */
 let ratingScales: PmsRatingScaleConfig[] = [
   {
     id: 'scale-5',
@@ -234,8 +272,10 @@ let ratingScales: PmsRatingScaleConfig[] = [
   },
 ]
 
+/** All rating scales. */
 export const mockListRatingScales = (): PmsRatingScaleConfig[] => ratingScales
 
+/** Replaces the levels and switches of a scale. */
 export function mockUpdateRatingScale(id: string, body: PmsRatingScaleUpdate): PmsRatingScaleConfig {
   const existing = ratingScales.find((s) => s.id === id)
   if (!existing) fail(404, 'PMS_RATING_SCALE_NOT_FOUND', 'Rating scale not found')
@@ -251,6 +291,7 @@ export function mockUpdateRatingScale(id: string, body: PmsRatingScaleUpdate): P
 
 const dept = (name: string) => (MOCK_DEPARTMENTS.find((d) => d.name === name) as { id: string }).id
 
+/** Roles (designations) per department used by the template wizard. */
 export const MOCK_DESIGNATIONS: PmsDesignationOption[] = [
   ['Production', 'Engineer – Kiln Ops'],
   ['Production', 'Shift Supervisor'],
@@ -267,6 +308,7 @@ export const MOCK_DESIGNATIONS: PmsDesignationOption[] = [
   ['Stores', 'Store Keeper'],
 ].map(([d, name], i) => ({ id: `desig-${i + 1}`, name, department_id: dept(d) }))
 
+/** Roles of one department (all when no department is given). */
 export const mockListDesignations = (departmentId?: string) =>
   departmentId ? MOCK_DESIGNATIONS.filter((d) => d.department_id === departmentId) : MOCK_DESIGNATIONS
 
@@ -276,8 +318,10 @@ const PLANT_OF_DESIGNATION: Record<string, { id: string; name: string }> = {
   'Engineer – Kiln Ops': { id: 'plant-mattampally', name: 'Mattampally' },
 }
 
+/** The plant a role belongs to, for the template list. */
 const plantFor = (designationName: string) => PLANT_OF_DESIGNATION[designationName] ?? null
 
+/** KRA/KPI and competency selections for a seeded template. */
 const seedDetail = (): Pick<PmsGoalTemplateUpsert, 'kras' | 'competencies'> => {
   const tk = (kpi_id: string, weight: number) => {
     const k = kpis.find((x) => x.id === kpi_id) as PmsKpi
@@ -296,6 +340,7 @@ const seedDetail = (): Pick<PmsGoalTemplateUpsert, 'kras' | 'competencies'> => {
 const designationName = (id: string) => MOCK_DESIGNATIONS.find((d) => d.id === id)?.name ?? ''
 const departmentName = (id: string) => MOCK_DEPARTMENTS.find((d) => d.id === id)?.name ?? ''
 
+/** Builds one seeded goal template. */
 function seedTemplate(
   n: number,
   name: string,
@@ -323,6 +368,7 @@ function seedTemplate(
   }
 }
 
+/** In-memory goal templates. */
 let templates: PmsGoalTemplate[] = [
   seedTemplate(1, 'Production Engineer', 'Annual goal template for Production Engineers', 'Engineer – Kiln Ops', 'active'),
   seedTemplate(2, 'Maintenance Engineer', 'Annual goal template for Maintenance Engineers', 'Maintenance Engineer', 'active'),
@@ -330,6 +376,7 @@ let templates: PmsGoalTemplate[] = [
   seedTemplate(4, 'Finance Manager', 'Annual goal template for Finance Managers', 'Finance Manager', 'draft', false),
 ]
 
+/** Full template to the list row shape. */
 const toListItem = (t: PmsGoalTemplate): PmsGoalTemplateListItem => ({
   id: t.id,
   name: t.basic.name,
@@ -342,6 +389,7 @@ const toListItem = (t: PmsGoalTemplate): PmsGoalTemplateListItem => ({
   status: t.basic.status,
 })
 
+/** Templates filtered by year, plant, department and search text. */
 export function mockListTemplates(params: PmsGoalTemplateListParams = {}): PmsGoalTemplateListItem[] {
   const q = params.search?.trim().toLowerCase()
   return templates
@@ -356,10 +404,12 @@ export function mockListTemplates(params: PmsGoalTemplateListParams = {}): PmsGo
     })
 }
 
+/** One template by id (404 error when missing). */
 export function mockGetTemplate(id: string): PmsGoalTemplate {
   return templates.find((t) => t.id === id) ?? fail(404, 'PMS_TEMPLATE_NOT_FOUND', 'Goal template not found')
 }
 
+/** Only one active template per role and year (409 otherwise). */
 function assertTemplateUnique(body: PmsGoalTemplateUpsert, ignoreId?: string) {
   const b = body.basic
   const clash = templates.some(
@@ -374,6 +424,7 @@ function assertTemplateUnique(body: PmsGoalTemplateUpsert, ignoreId?: string) {
   if (clash) fail(409, 'PMS_TEMPLATE_DUPLICATE', 'A template with this name already exists for this role and year')
 }
 
+/** Form body to a stored template. */
 function build(id: string, body: PmsGoalTemplateUpsert): PmsGoalTemplate {
   const name = designationName(body.basic.designation_id)
   return {
@@ -385,6 +436,7 @@ function build(id: string, body: PmsGoalTemplateUpsert): PmsGoalTemplate {
   }
 }
 
+/** Adds a template. */
 export function mockCreateTemplate(body: PmsGoalTemplateUpsert): PmsGoalTemplate {
   assertTemplateUnique(body)
   const t = build(uid('tpl'), body)
@@ -392,6 +444,7 @@ export function mockCreateTemplate(body: PmsGoalTemplateUpsert): PmsGoalTemplate
   return t
 }
 
+/** Replaces a template. */
 export function mockUpdateTemplate(id: string, body: PmsGoalTemplateUpsert): PmsGoalTemplate {
   mockGetTemplate(id)
   assertTemplateUnique(body, id)
@@ -400,27 +453,8 @@ export function mockUpdateTemplate(id: string, body: PmsGoalTemplateUpsert): Pms
   return t
 }
 
-export function mockSetTemplateStatus(id: string, status: PmsTemplateStatus): PmsGoalTemplate {
-  const t = mockGetTemplate(id)
-  if (status === 'active' && (t.kras.length === 0 || t.competencies.length === 0)) {
-    fail(409, 'PMS_TEMPLATE_INCOMPLETE', 'Finish the KRA & KPI and competency steps before activating')
-  }
-  const updated = { ...t, basic: { ...t.basic, status } }
-  templates = templates.map((x) => (x.id === id ? updated : x))
-  return updated
-}
 
-export function mockDuplicateTemplate(id: string): PmsGoalTemplate {
-  const t = mockGetTemplate(id)
-  const copy = build(uid('tpl'), {
-    basic: { ...t.basic, name: `${t.basic.name} (Copy)`, status: 'draft' },
-    kras: t.kras,
-    competencies: t.competencies,
-  })
-  templates = [copy, ...templates]
-  return copy
-}
-
+/** Deletes a template. */
 export function mockDeleteTemplate(id: string): void {
   mockGetTemplate(id)
   templates = templates.filter((t) => t.id !== id)
