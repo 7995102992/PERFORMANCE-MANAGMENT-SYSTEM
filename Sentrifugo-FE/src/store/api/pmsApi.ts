@@ -26,6 +26,11 @@ import type {
   PmsSendToCalibration,
 } from '@/types/pms-hr'
 import type {
+  PmsAppraisalHodQueueRow,
+  PmsAppraisalHodReview,
+  PmsAppraisalHodSave,
+} from '@/types/pms-appraisal-hod'
+import type {
   PmsManagerAppraisal,
   PmsManagerAppraisalSave,
   PmsMidYearReview,
@@ -981,6 +986,45 @@ export const pmsApi = createApi({
         { type: 'PmsManager', id: 'CALIBRATION' },
       ],
     }),
+    // -- Functional Head: L2 appraisal rating (5.6 - 5.7) --
+    // Screen 5.7: GET /pms-appraisal-hod/get/queue.
+    getPmsAppraisalHodQueue: builder.query<PmsAppraisalHodQueueRow[], string>({
+      query: (financialYear) => ({
+        url: '/pms-appraisal-hod/get/queue',
+        params: { financial_year: financialYear },
+      }),
+      transformResponse: (r: ApiEnvelope<PmsAppraisalHodQueueRow[]>) => r.data,
+      providesTags: [{ type: 'PmsManager', id: 'HOD-APPRAISAL-QUEUE' }],
+    }),
+    // Screen 5.6: GET /pms-appraisal-hod/get/employee.
+    getPmsAppraisalHodReview: builder.query<PmsAppraisalHodReview, { employeeUserId: string; financialYear: string }>({
+      query: ({ employeeUserId, financialYear }) => ({
+        url: '/pms-appraisal-hod/get/employee',
+        params: { employee_user_id: employeeUserId, financial_year: financialYear },
+      }),
+      transformResponse: (r: ApiEnvelope<PmsAppraisalHodReview>) => r.data,
+      providesTags: (_r, _e, { employeeUserId }) => [{ type: 'PmsManager', id: `HOD-APPRAISAL-${employeeUserId}` }],
+    }),
+    // Screen 5.6: PUT /pms-appraisal-hod/update/hod-ratings (draft).
+    savePmsAppraisalHod: builder.mutation<PmsAppraisalHodReview, PmsAppraisalHodSave>({
+      query: (body) => ({ url: '/pms-appraisal-hod/update/hod-ratings', method: 'PUT', body }),
+      transformResponse: (r: ApiEnvelope<PmsAppraisalHodReview>) => r.data,
+      invalidatesTags: (_r, _e, b) => [
+        { type: 'PmsManager', id: 'HOD-APPRAISAL-QUEUE' },
+        { type: 'PmsManager', id: `HOD-APPRAISAL-${b.employee_user_id}` },
+      ],
+    }),
+    // Screen 5.6: POST /pms-appraisal-hod/submit/hod-ratings (every KRA and manager competency rated).
+    submitPmsAppraisalHod: builder.mutation<PmsAppraisalHodReview, PmsAppraisalHodSave>({
+      query: (body) => ({ url: '/pms-appraisal-hod/submit/hod-ratings', method: 'POST', body }),
+      transformResponse: (r: ApiEnvelope<PmsAppraisalHodReview>) => r.data,
+      invalidatesTags: (_r, _e, b) => [
+        { type: 'PmsManager', id: 'HOD-APPRAISAL-QUEUE' },
+        { type: 'PmsManager', id: `HOD-APPRAISAL-${b.employee_user_id}` },
+        { type: 'PmsManager', id: 'HR-QUEUE' },
+      ],
+    }),
+
     // Screen 1.9: GET /pms-calibration/get/calibration.
     getPmsCalibration: builder.query<PmsCalibration, string>({
       query: (financialYear) => ({ url: '/pms-calibration/get/calibration', params: { financial_year: financialYear } }),
@@ -1116,6 +1160,10 @@ export const {
   useSavePmsHrAppraisalMutation,
   useSubmitPmsHrAppraisalMutation,
   useSendPmsToCalibrationMutation,
+  useGetPmsAppraisalHodQueueQuery,
+  useGetPmsAppraisalHodReviewQuery,
+  useSavePmsAppraisalHodMutation,
+  useSubmitPmsAppraisalHodMutation,
   useGetPmsCalibrationQuery,
   useSavePmsCalibrationMutation,
   usePublishPmsCalibrationMutation,

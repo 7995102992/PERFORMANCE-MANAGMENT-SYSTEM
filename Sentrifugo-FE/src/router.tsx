@@ -157,6 +157,8 @@ import ManagerAppraisalPage from "./pages/pms/appraisal/ManagerAppraisalPage";
 import HrCompetencyRatingPage from "./pages/pms/hr/HrCompetencyRatingPage";
 import HrCompetencyEmployeePage from "./pages/pms/hr/HrCompetencyEmployeePage";
 import CalibrationPage from "./pages/pms/hr/CalibrationPage";
+import ApproveAppraisalPage from "./pages/pms/appraisal-hod/ApproveAppraisalPage";
+import HodAppraisalReviewPage from "./pages/pms/appraisal-hod/HodAppraisalReviewPage";
 import MyProgressPage from "./pages/pms/employee/MyProgressPage";
 import SelfAppraisalPage from "./pages/pms/employee/SelfAppraisalPage";
 import PmsComingSoon from "./pages/pms/PmsComingSoon";
@@ -882,6 +884,10 @@ const pmsTargetRevisionRoute = pmsRoute("/pms/mid-year-review/$fy/employee/$empl
 const pmsTeamAppraisalRoute = pmsRoute("/pms/team-appraisal/$fy", () => <TeamAppraisalPage />);
 const pmsManagerAppraisalRoute = pmsRoute("/pms/team-appraisal/$fy/employee/$employeeUserId", () => <ManagerAppraisalPage />);
 
+// Functional Head: L2 appraisal rating (5.6 - 5.7), between the Section Head's L1 rating and Corporate HR.
+const pmsApproveAppraisalRoute = pmsRoute("/pms/approve-appraisal/$fy", () => <ApproveAppraisalPage />);
+const pmsHodAppraisalReviewRoute = pmsRoute("/pms/approve-appraisal/$fy/employee/$employeeUserId", () => <HodAppraisalReviewPage />);
+
 // Employee goal review (4.x) and HOD approval (5.x).
 const pmsMyGoalsRoute = pmsRoute("/pms/my-goals/$fy", () => <MyGoalsPage />);
 const pmsGoalApprovalsRoute = pmsRoute("/pms/goal-approvals/$fy", () => <GoalApprovalsPage />);
@@ -904,7 +910,6 @@ const pmsPlaceholderRoutes = [
   "appraisal-history",
   "lock-access",
   "cycle-closure",
-  "approve-appraisal",
   "status-tracker",
 ].map((slug) => pmsRoute(`/pms/${slug}`, () => <PmsComingSoon />));
 
@@ -1213,6 +1218,8 @@ const routeTree = rootRoute.addChildren([
     pmsHrRatingRoute,
     pmsHrRatingEmployeeRoute,
     pmsCalibrationRoute,
+    pmsApproveAppraisalRoute,
+    pmsHodAppraisalReviewRoute,
     pmsGoalReviewRoute,
     pmsApprovalHistoryRoute,
     pmsApprovalTrailRoute,

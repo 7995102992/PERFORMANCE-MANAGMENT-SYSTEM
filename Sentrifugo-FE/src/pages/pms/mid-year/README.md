@@ -13,7 +13,7 @@ MidYearTeamPage (3.10) ──open──▶ MidYearReviewPage (3.11) ──"revis
 |---|---|
 | Route | `/pms/mid-year-review/:fy` |
 | Data | `useGetPmsMidYearTeamQuery(financialYear)` (GET `/pms-mid-year/get/team`) |
-| Shows | Employee, role, H1 achievement %, RAG dot, review status (`not_started`, `completed_no_revision`, `revision_requested`) |
+| Shows | Employee, role, H1 achievement %, RAG dot, review status (`not_started`, `completed_no_revision`, `revision_requested`, `completed_with_revision`) |
 | Actions | **Open Review** (not started) or **View** (done) opens 3.11 |
 
 ## MidYearReviewPage.tsx - 3.11 "Mid-Year Review"
@@ -36,7 +36,7 @@ MidYearTeamPage (3.10) ──open──▶ MidYearReviewPage (3.11) ──"revis
 | Shows | Every KRA with its locked weight and current target; revised target and reason per row; an optional attachment |
 | Actions | **Send to HOD** (only the changed rows are sent); **Back** to 3.11 |
 | Validation | Revised target numeric and not negative; a changed target needs a reason of 5+ characters; at least one target must change; attachment PDF / Excel / PNG / JPEG up to 5 MB |
-| Notes | Only the file **name** is kept (file storage is not connected). HOD approval of the revision is not built yet. |
+| Notes | Only the file **name** is kept (file storage is not connected). HOD approval happens on the shared goal-approvals queue (`src/pages/pms/goal-setting/hod`, `request_type: target_revision`) — an approved revision's targets apply immediately, with no separate employee acknowledgement step. |
 
 ## Schema file
 

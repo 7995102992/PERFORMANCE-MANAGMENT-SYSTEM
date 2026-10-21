@@ -16,6 +16,7 @@ const STATUS_META: Record<PmsMidYearStatus, { label: string; icon: LucideIcon; c
   not_started: { label: "Not Started", icon: Circle, className: "text-muted-foreground" },
   completed_no_revision: { label: "Completed – No Revision", icon: CheckCircle2, className: "text-emerald-600" },
   revision_requested: { label: "Revision Requested", icon: RefreshCw, className: "text-blue-500" },
+  completed_with_revision: { label: "Completed – Revision Applied", icon: CheckCircle2, className: "text-emerald-600" },
 };
 
 /** Screen 3.10 - Mid-Year Review, My Team: where each employee's mid-year review stands. */

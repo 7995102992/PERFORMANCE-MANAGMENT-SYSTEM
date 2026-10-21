@@ -210,7 +210,7 @@ export const sidebarMenuConfig: MenuSection[] = [
           { key: "pms-goal-approvals", label: "Goal Approvals", path: `/pms/goal-approvals/${currentFinancialYear()}`, icon: CheckCircle2, permission: "goal_approval" },
           { key: "pms-target-revisions", label: "Target Revisions", path: "/pms/target-revisions", icon: RefreshCw, permission: "target_revision" },
           { key: "pms-team-appraisal", label: "Team Appraisal", path: `/pms/team-appraisal/${currentFinancialYear()}`, icon: CalendarCheck, permission: "team_appraisal" },
-          { key: "pms-approve-appraisal", label: "Approve Appraisal", path: "/pms/approve-appraisal", icon: FileText, permission: "appraisal_review" },
+          { key: "pms-approve-appraisal", label: "Approve Appraisal", path: `/pms/approve-appraisal/${currentFinancialYear()}`, icon: FileText, permission: "appraisal_review" },
           // Corporate HR. The API gates both on `rating_normalization`.
           { key: "pms-hr-competency-rating", label: "HR Competency Rating", path: `/pms/hr-competency-rating/${currentFinancialYear()}`, icon: Star, permission: "rating_normalization" },
           { key: "pms-calibration", label: "Calibration", path: `/pms/calibration/${currentFinancialYear()}`, icon: SlidersHorizontal, permission: "rating_normalization" },

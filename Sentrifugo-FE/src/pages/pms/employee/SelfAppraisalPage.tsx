@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { CheckCircle2, FilePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { PageLoader } from "@/components/shared/PageLoader";
 import { toast } from "@/lib/toast";
@@ -57,6 +58,8 @@ const SelfAppraisalForm = ({ data, financialYear }: { data: PmsMySelfAppraisal; 
   const [competencies, setCompetencies] = useState(() => data.competencies.map((c) => ({ ...c })));
   // Validation messages keyed `kra.<i>`, `kra.<i>.actual`, `comp.<i>` ... and whether the sheet is submitted.
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // Confirmation dialog shown before the final, irreversible submit.
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const submitted = data.status === "submitted";
   // The Revised target column appears once any KRA has a final revised target; Target always stays the original.
   const hasRevised = kras.some((k) => k.revised_target != null);
@@ -269,12 +272,21 @@ const SelfAppraisalForm = ({ data, financialYear }: { data: PmsMySelfAppraisal; 
           {submitted ? (
             <p className="text-sm text-muted-foreground">Submitted to your manager.</p>
           ) : (
-            <Button onClick={() => run(true)} disabled={saving}>
+            <Button onClick={() => setConfirmOpen(true)} disabled={saving}>
               {saving ? "Saving…" : "Submit Self Appraisal"}
             </Button>
           )}
         </div>
       </PmsTableCard>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Submit self appraisal?"
+        description="Once submitted, you won't be able to change your ratings or evidence. Your manager will see this appraisal next."
+        confirmLabel="Submit"
+        onConfirm={() => run(true)}
+      />
     </div>
   );
 };

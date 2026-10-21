@@ -96,7 +96,12 @@ export interface PmsTeamProgressRow {
 
 // ── 3.10 - 3.12 Mid-year review ──────────────────────────────────────────────
 
-export type PmsMidYearStatus = 'not_started' | 'completed_no_revision' | 'revision_requested'
+export type PmsMidYearStatus =
+  | 'not_started'
+  | 'completed_no_revision'
+  | 'revision_requested'
+  /** The HOD approved every KPI of the revision and its targets are already live — nothing more to do. */
+  | 'completed_with_revision'
 
 export interface PmsMidYearRow {
   employee_user_id: string
