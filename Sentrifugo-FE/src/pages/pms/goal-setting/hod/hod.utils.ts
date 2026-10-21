@@ -21,15 +21,6 @@ export function hodValue(value?: number | null, unit?: string | null): string {
   return unit ? `${hodNumber(value)} ${unit}` : hodNumber(value);
 }
 
-/** Signed change for the review table: `−200 (−3.5%)`. */
-export function hodDelta(change: number, percent: number): string {
-  if (change === 0) return "No change";
-  const sign = change > 0 ? "+" : "−";
-  const abs = hodNumber(Math.abs(change));
-  const pct = percent === 0 ? "" : ` (${sign}${Math.abs(percent).toFixed(1)}%)`;
-  return `${sign}${abs}${pct}`;
-}
-
 /** Native select styled like the other PMS filters. */
 export const HOD_SELECT_CLASS =
   "h-10 rounded-md border bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";

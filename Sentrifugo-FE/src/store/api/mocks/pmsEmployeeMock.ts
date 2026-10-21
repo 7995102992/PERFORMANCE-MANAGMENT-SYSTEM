@@ -131,9 +131,8 @@ const progress: PmsMyProgress = {
   })),
 }
 
-/** Saves actuals, status and evidence; a submit needs every actual and status, and freezes the sheet. */
+/** Saves actuals, status and evidence; a submit needs every actual and status. It can be repeated any time. */
 function saveProgress(body: PmsMyProgressSave): PmsMyProgress {
-  if (progress.state === 'frozen') fail('This period is frozen.', 409)
   if (body.submit && (body.entries.length < progress.kras.length || body.entries.some((e) => e.status === null))) {
     fail('Enter the actual and status for every KRA before submitting')
   }
@@ -147,7 +146,7 @@ function saveProgress(body: PmsMyProgressSave): PmsMyProgress {
     }
   }
   progress.comment = body.comment
-  if (body.submit) progress.state = 'frozen'
+  if (body.submit) progress.state = 'submitted'
   return { ...clone(progress), financial_year: body.financial_year }
 }
 

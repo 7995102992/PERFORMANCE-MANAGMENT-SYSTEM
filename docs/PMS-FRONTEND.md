@@ -30,7 +30,7 @@ Files: `pages/pms/cycle/`
 | Create / edit / view cycle (4-step wizard) | `InitiateAppraisal.tsx` | `/pms/cycle/new`, `/pms/cycle/:cycleId/edit`, `/pms/cycle/:cycleId` | Real API for save; plants and departments are mocked |
 | Step 1 Basic Details | `components/BasicDetailsStep.tsx` | inside the wizard | Form only |
 | Step 2 Timeline | `components/TimelineStep.tsx` | inside the wizard | Form only; stage dates suggested from the period |
-| Step 3 Applicability | `components/ApplicabilityStep.tsx` | inside the wizard | Plants and departments are mocked; eligibility preview is mocked |
+| Step 3 Applicability | `components/ApplicabilityStep.tsx` | inside the wizard | Two rule cards: Goal Setting (who gets goals) and Appraisal (who is rated), each with its own employment types and minimum service. Eligibility preview is mocked |
 | Step 4 Rating and publish | `components/RatingPublishStep.tsx` | inside the wizard | Real rating scale list |
 | Eligible employees preview | `components/EligibleEmployeesDialog.tsx` | opened from step 3 | Mocked (`previewEligibleEmployees`) |
 | Cycle activated | `CycleActivated.tsx` | `/pms/cycle/:cycleId/activated` | Real API (`getPmsCycleActivation`) |
@@ -69,18 +69,63 @@ Files: `pages/pms/goal-setting/`
 
 | Screen | File | Route | Status |
 |---|---|---|---|
-| 3.1 My team (manager) | `TeamGoalSettingPage.tsx` | `/pms/team-goal-setting/:fy` | Real. Team comes from IAM (`getPmsTeam`) |
-| 3.3 to 3.5 Enter, validate, send targets | `TargetAssignmentPage.tsx` | `/pms/team-goal-setting/:fy/employee/:employeeUserId` | Real: save, validate, send |
+| 3.1 My team (manager) | `TeamGoalSettingPage.tsx` | `/pms/team-goal-setting/:fy` | Static data; API wired (`getPmsTeam`) |
+| 3.2 Select employee by role | `SelectRoleTemplatePage.tsx` | `/pms/team-goal-setting/:fy/role` | Static data; API wired |
+| 3.3 to 3.5 Enter, validate, send targets | `TargetAssignmentPage.tsx` | `/pms/team-goal-setting/:fy/employee/:employeeUserId` | Static data; API wired. Validation: weights 0-100 and total 100%, every target required and numeric |
+| 3.6 Goal status and send to HOD | `TeamGoalStatusPage.tsx` | `/pms/team-goal-setting/:fy/status` | Static data; API wired (`sendGoalsToHod`). Linked from the footer of 3.1 |
+| 3.7 Revise returned goals | `ReviseReturnedGoalsPage.tsx` | `/pms/team-goal-setting/:fy/employee/:employeeUserId/revise` | Static data; API wired (the target endpoints) |
+| 3.8 Set period 2 KRAs, transferred employee | `TransferredKrasPage.tsx` | `/pms/team-goal-setting/:fy/employee/:employeeUserId/transfer` | Static data; API wired (`/pms-goal-transfer`) |
 | 4.1 to 4.3 My goals (employee) | `MyGoalsPage.tsx` | `/pms/my-goals/:fy` | Real: acknowledge, request change |
 | 5.1 Goal approvals (HOD) | `GoalApprovalsPage.tsx` | `/pms/goal-approvals/:fy` | Real |
 | 5.2 Review one employee (HOD) | `GoalReviewPage.tsx` | `/pms/goal-approvals/:fy/employee/:employeeUserId` | Real: approve or return |
 
 Assignment statuses, in order: `DRAFT`, `SENT_TO_EMPLOYEE`, `ACKNOWLEDGED` (or `CHANGE_REQUESTED`), `WITH_HOD`, `APPROVED`.
 
+Manager screens (3.1 to 3.14) call PMS_Java. The request and response shapes were checked against the controllers and models, and `PmsManagerApiTest` in PMS_Java covers the same calls. To work without the backend, set `VITE_PMS_STATIC_MANAGER=true`: they then answer from `store/api/mocks/pmsGoalAssignmentMock.ts` and `pmsManagerMock.ts`, which sit in front of the base query in `pmsApi.ts`. In static mode 3.1 and 3.2 share one set of goal sheets; 3.6 has its own.
+
+### 2.3b Manager: progress, mid-year review and appraisal (screens 3.9 to 3.14)
+
+These screens run on static data for now and are wired to PMS_Java (`/pms-goal-transfer`, `/pms-progress`, `/pms-mid-year`, `/pms-appraisal`; types in `types/pms-manager.ts`; contract in `PMS_Java/API_FRONTEND_GUIDE.md` section 10). Each screen also validates with Zod (`*.schema.ts` next to the page) before it calls the API. The data only appears once the employee has had goals approved by the HOD and has reported actuals and a self appraisal, because those are the sources.
+
+| Screen | File | Route | Validation |
+|---|---|---|---|
+| 3.9 Team progress dashboard | `progress/TeamProgressPage.tsx` | `/pms/team-progress/:fy` | Read only |
+| 3.10 Mid-year review, my team | `mid-year/MidYearTeamPage.tsx` | `/pms/mid-year-review/:fy` | Read only |
+| 3.11 Mid-year review | `mid-year/MidYearReviewPage.tsx` | `/pms/mid-year-review/:fy/employee/:employeeUserId` | Revision choice required; notes (10+ chars) required when revising |
+| 3.12 Target revision request | `mid-year/TargetRevisionRequestPage.tsx` | `.../employee/:employeeUserId/revision` | At least one target changed; reason per changed row; attachment PDF/Excel/image up to 5 MB |
+| 3.13 Team appraisal | `appraisal/TeamAppraisalPage.tsx` | `/pms/team-appraisal/:fy` | Read only |
+| 3.14 Manager rating, submit to HOD | `appraisal/ManagerAppraisalPage.tsx` | `/pms/team-appraisal/:fy/employee/:employeeUserId` | Every KRA and competency rated; recommended rating required; a rating 2+ points from self needs a comment |
+
+Pages that load a record and then edit it are split into a loader component and a form component that starts from props (no state-setting effect). Follow that pattern for new forms.
+
+### 2.3c Corporate HR: HR competency rating and calibration (screens 1.7 to 1.9)
+
+Files: `pages/pms/hr/`
+
+| Screen | File | Route | Status |
+|---|---|---|---|
+| 1.7 HR Competency Rating (list) | `HrCompetencyRatingPage.tsx` | `/pms/hr-competency-rating/:fy` | Wired to `/pms-hr-appraisal`; static data until `VITE_PMS_STATIC_DATA=false` |
+| 1.8 HR Competency Rating (employee) | `HrCompetencyEmployeePage.tsx` | `/pms/hr-competency-rating/:fy/employee/:employeeUserId` | Same |
+| 1.9 Calibration & Publish | `CalibrationPage.tsx` | `/pms/calibration/:fy` | Wired to `/pms-calibration`; same |
+| Validation | `hr.schema.ts` | - | Zod: every HR competency rated; a changed rating needs a reason |
+
+The API gates all of these on `rating_normalization`, the code Corporate HR already holds. The menu items carry no permission yet, like the other PMS items. Calibration works on the whole organisation for the year; there is no plant or department filter because PMS does not store them (only the department id).
+
+### 2.3d Employee screens (4.1 to 4.6)
+
+| Screen | File | Route | Status |
+|---|---|---|---|
+| 4.1 - 4.3 My Goals, request change, acknowledge | `goal-setting/MyGoalsPage.tsx` | `/pms/my-goals/:fy` | Static data (`mocks/pmsEmployeeMock.ts`) until `VITE_PMS_STATIC_DATA=false`; then the real `/pms-goal-assignment` API |
+| 4.5 Acknowledge revised target | same page, when the sheet carries a `revision` | same | Static data. In the mock, the revision appears after you acknowledge the original goals |
+| 4.4 Update Progress | `employee/MyProgressPage.tsx` | `/pms/my-progress/:fy` | Static data. The API has the PUT but no GET for the employee's own sheet yet |
+| 4.6 Self Appraisal | `employee/SelfAppraisalPage.tsx` | `/pms/self-appraisal/:fy` | Static data. The API has the PUT but no GET, and no field for achievement text or comments |
+
+Evidence uploads keep only the file name (`shared/EvidenceUpload.tsx`); file storage is not connected.
+
 ### 2.4 Not built yet
 
 Routes for these exist in `router.tsx` and show `PmsComingSoon.tsx`:
-progress tracking (6.x), mid-year review and target revisions (7.x), self and manager appraisal and HOD review (8.x), rating normalisation (9.x), final rating (10.x), cycle closure (11.x).
+employee-side and HOD-side progress tracking (6.x), HOD approval of target revisions (7.x), self appraisal and HOD review (8.x), final rating (10.x), cycle closure (11.x).
 
 ## 3. Shared components
 
@@ -121,17 +166,11 @@ Recent additions:
 
 ## 5. Mocked, not yet real
 
-These still return fake data from `store/api/mocks/`:
-
 | Endpoint | Effect |
 |---|---|
-| `previewEligibleEmployees` | Eligibility preview always shows the same people |
-| `getPmsPlants`, `getPmsDepartments` | Dropdowns come from fixed lists |
-| `setPmsTemplateStatus` | Status change does not reach the server |
-| `duplicatePmsTemplate` | Duplicate does not reach the server |
-| `getPmsDesignations` | Designation list is fixed |
+| `previewEligibleEmployees` | Eligibility preview always shows the same people. No endpoint in `PMS_Java` yet; it needs an employee-directory query from IAM |
 
-Replace these one at a time when the backend endpoint exists.
+Everything else goes to the PMS API, including the template status and duplicate calls. The manager screens (3.1 to 3.14) call the API (static data only with `VITE_PMS_STATIC_MANAGER=true`). The HR screens (1.7 to 1.9) and employee progress / self appraisal (4.4, 4.6) answer from static data until `VITE_PMS_STATIC_DATA=false`. Plants, departments and designations come from IAM (`usePmsPlants`, `usePmsDepartments`, `usePmsDesignations` in `pages/pms/shared/usePmsLookups.ts`; `fetchLookups` in `store/api/pmsLookups.ts` resolves ids to names inside the API layer). A PMS plant is an IAM business unit.
 
 ## 6. Recent decisions
 

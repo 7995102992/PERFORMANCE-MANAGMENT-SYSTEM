@@ -101,8 +101,11 @@ export type PmsMidYearStatus = 'not_started' | 'completed_no_revision' | 'revisi
 export interface PmsMidYearRow {
   employee_user_id: string
   employee_name: string
+  emp_code?: string
   role: string
-  /** Null until the employee has reported an actual. */
+  /** False while the HOD has not approved the goals: nothing to review yet. */
+  goals_approved?: boolean
+  /** Weighted achievement of the latest figures the employee reported; null until one is. */
   h1_achievement: number | null
   rag: PmsRag | null
   status: PmsMidYearStatus
@@ -113,8 +116,14 @@ export interface PmsMidYearKra {
   kra_name: string
   target: number
   unit: string
+  weight?: number
+  /** The latest actual the employee reported in Update Progress. */
   h1_actual: number | null
+  /** Actual / target as a percent, calculated by the API. */
+  achievement?: number | null
   rag: PmsRag | null
+  /** The status the employee picked in Update Progress. */
+  employee_status?: PmsRag | null
 }
 
 export interface PmsMidYearReview {
@@ -126,6 +135,12 @@ export interface PmsMidYearReview {
   template: string
   status: PmsMidYearStatus
   kras: PmsMidYearKra[]
+  /** Weighted achievement over every KRA that has a figure, and its RAG. */
+  overall_achievement?: number | null
+  overall_rag?: PmsRag | null
+  /** The employee's own comment from Update Progress and when they last submitted. */
+  employee_comment?: string | null
+  progress_updated_on?: string | null
   discussion_notes: string
   revision_required: boolean | null
 }

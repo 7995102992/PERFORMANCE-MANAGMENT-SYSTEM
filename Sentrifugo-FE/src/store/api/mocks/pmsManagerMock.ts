@@ -274,7 +274,9 @@ export function mockMidYearTeam(): PmsMidYearRow[] {
     return {
       employee_user_id: id,
       employee_name: p.name,
+      emp_code: p.code,
       role: p.role,
+      goals_approved: true,
       h1_achievement: pct,
       rag: ragFromAchievement(pct),
       status,
@@ -283,12 +285,12 @@ export function mockMidYearTeam(): PmsMidYearRow[] {
 }
 
 const KILN_KRAS: Array<Omit<PmsMidYearKra, 'kpi_id'>> = [
-  { kra_name: 'Clinker production', target: 5650, unit: 'TPD', h1_actual: 5180, rag: 'at_risk' },
-  { kra_name: 'Specific heat consumption', target: 720, unit: 'kcal/kg', h1_actual: 728, rag: 'at_risk' },
-  { kra_name: 'Kiln run factor', target: 92, unit: '%', h1_actual: 93.1, rag: 'on_track' },
-  { kra_name: 'Power consumption', target: 18.5, unit: 'kWh/t', h1_actual: 18.2, rag: 'on_track' },
-  { kra_name: 'Safety – LTI', target: 0, unit: 'Count', h1_actual: 0, rag: 'on_track' },
-  { kra_name: 'Refractory life', target: 10, unit: 'Months', h1_actual: 11, rag: 'on_track' },
+  { kra_name: 'Clinker production', target: 5650, unit: 'TPD', h1_actual: 5180, achievement: 91.7, rag: 'at_risk' },
+  { kra_name: 'Specific heat consumption', target: 720, unit: 'kcal/kg', h1_actual: 728, achievement: 101.1, rag: 'on_track' },
+  { kra_name: 'Kiln run factor', target: 92, unit: '%', h1_actual: 93.1, achievement: 101.2, rag: 'on_track' },
+  { kra_name: 'Power consumption', target: 18.5, unit: 'kWh/t', h1_actual: 18.2, achievement: 98.4, rag: 'on_track' },
+  { kra_name: 'Safety – LTI', target: 0, unit: 'Count', h1_actual: 0, achievement: 100, rag: 'on_track' },
+  { kra_name: 'Refractory life', target: 10, unit: 'Months', h1_actual: 11, achievement: 110, rag: 'on_track' },
 ]
 
 const midYearKras = (): PmsMidYearKra[] => KILN_KRAS.map((k, i) => ({ ...k, kpi_id: `kpi-${i + 1}` }))
@@ -308,6 +310,8 @@ export function mockMidYearReview(employeeUserId: string): PmsMidYearReview {
     template: p!.template,
     status: status!,
     kras: midYearKras(),
+    overall_achievement: 98.8,
+    overall_rag: 'on_track',
     discussion_notes: saved?.notes ?? '',
     revision_required: saved?.revision ?? null,
   }

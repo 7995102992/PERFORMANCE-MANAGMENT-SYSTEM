@@ -24,8 +24,8 @@ export interface PmsMyProgressKra {
 
 export interface PmsMyProgress {
   financial_year: string
-  /** `frozen` once submitted for the period: shown read-only. */
-  state: 'open' | 'frozen'
+  /** `submitted` once sent to the manager; it stays editable and can be submitted again. */
+  state: 'open' | 'submitted'
   period?: string
   submitted_on?: string | null
   kras: PmsMyProgressKra[]

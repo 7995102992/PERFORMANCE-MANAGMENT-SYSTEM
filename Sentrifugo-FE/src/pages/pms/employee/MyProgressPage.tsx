@@ -15,6 +15,7 @@ import type { PmsRag } from "@/types/pms-manager";
 import { EvidenceUpload } from "../shared/EvidenceUpload";
 import { FinancialYearTag } from "../shared/FinancialYearTag";
 import { PMS_HEADER_ROW, PmsTableCard, PmsTh } from "../shared/PmsTableCard";
+import { formatDisplayDate } from "../shared/pms.utils";
 import { formatNumber, parseDecimal } from "../shared/validation";
 
 /** Display name of each progress status. */
@@ -61,7 +62,7 @@ interface Row {
 
 /**
  * The editable part of screen 4.4: actuals, status and evidence per KRA, comments, then save a draft
- * or submit to the manager (which freezes the period).
+ * or submit to the manager. A submitted sheet is never frozen: it can be changed and submitted again.
  */
 const ProgressForm = ({
   data,
@@ -85,10 +86,10 @@ const ProgressForm = ({
       evidence: k.evidence_name,
     })),
   );
-  // Comments, per-row validation messages, and whether the period is frozen (view only).
+  // Comments and per-row validation messages. A submitted sheet stays editable and can be submitted again.
   const [comment, setComment] = useState(data.comment);
   const [errors, setErrors] = useState<Record<number, string>>({});
-  const frozen = data.state === "frozen";
+  const submittedBefore = data.state === "submitted";
   // The Revised target column appears once any KPI has a final revised target; Target always stays the original.
   const hasRevised = rows.some((r) => r.kra.revised_target != null);
 
@@ -136,7 +137,7 @@ const ProgressForm = ({
     };
     try {
       await save(body).unwrap();
-      toast.success(submit ? "Progress submitted to your manager" : "Draft saved");
+      toast.success(submit ? "Progress submitted to your manager. You can update it again any time." : "Draft saved");
     } catch (e) {
       toast.error(e, submit ? "Could not submit the progress" : "Could not save the draft");
     }
@@ -149,9 +150,10 @@ const ProgressForm = ({
         subtitle="Enter actuals, status and evidence for this month"
         action={
           <div className="flex items-center gap-3">
-            {frozen && (
+            {submittedBefore && (
               <span className="inline-flex items-center gap-1.5 text-sm text-emerald-600">
-                <CheckCircle2 className="h-4 w-4" /> Frozen
+                <CheckCircle2 className="h-4 w-4" /> Submitted
+                {data.submitted_on ? ` · ${formatDisplayDate(data.submitted_on)}` : ""}
               </span>
             )}
             <FinancialYearTag fy={fy} onChange={onYearChange} />
@@ -192,7 +194,6 @@ const ProgressForm = ({
                   <Input
                     inputMode="decimal"
                     className={`w-28 ${errors[i] ? "border-destructive" : ""}`}
-                    disabled={frozen}
                     aria-label={`${r.kra.kpi_name} actual`}
                     aria-invalid={!!errors[i]}
                     value={r.actual}
@@ -203,7 +204,6 @@ const ProgressForm = ({
                 <td className="px-4 py-3">
                   <Select
                     value={r.status ?? ""}
-                    disabled={frozen}
                     onValueChange={(v) => patch(i, { status: v as PmsRag })}
                   >
                     <SelectTrigger className="w-36" aria-label={`${r.kra.kpi_name} status`}>
@@ -221,7 +221,6 @@ const ProgressForm = ({
                 <td className="px-4 py-3">
                   <EvidenceUpload
                     value={r.evidence}
-                    disabled={frozen}
                     label={`${r.kra.kpi_name} evidence`}
                     onChange={(name) => patch(i, { evidence: name })}
                   />
@@ -236,18 +235,17 @@ const ProgressForm = ({
           <textarea
             id="progress-comments"
             rows={2}
-            disabled={frozen}
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm disabled:opacity-60"
+            className="w-full rounded-md border bg-background px-3 py-2 text-sm"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
           />
         </div>
 
         <div className="mt-4 flex items-center justify-between border-t pt-4">
-          <Button variant="outline" onClick={() => run(false)} disabled={frozen || saving}>
+          <Button variant="outline" onClick={() => run(false)} disabled={saving}>
             Save Draft
           </Button>
-          <Button onClick={() => run(true)} disabled={frozen || saving}>
+          <Button onClick={() => run(true)} disabled={saving}>
             {saving ? "Saving…" : "Submit to Manager"}
           </Button>
         </div>

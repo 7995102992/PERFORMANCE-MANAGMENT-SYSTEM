@@ -39,7 +39,7 @@ const MidYearTeamPage = () => {
       <PmsTableCard>
         {isError && <p className="px-4 py-6 text-sm text-destructive">Could not load the mid-year review.</p>}
         {!isError && rows.length === 0 && (
-          <p className="px-4 py-6 text-sm text-muted-foreground">No team members are due a mid-year review.</p>
+          <p className="px-4 py-6 text-sm text-muted-foreground">You have no direct reports.</p>
         )}
         {rows.length > 0 && (
           <table className="w-full text-sm">
@@ -47,7 +47,7 @@ const MidYearTeamPage = () => {
               <tr className={PMS_HEADER_ROW}>
                 <PmsTh>Employee</PmsTh>
                 <PmsTh>Role</PmsTh>
-                <PmsTh>H1 achievement</PmsTh>
+                <PmsTh>Latest achievement</PmsTh>
                 <PmsTh>RAG</PmsTh>
                 <PmsTh>Mid-year status</PmsTh>
                 <PmsTh>Action</PmsTh>
@@ -57,9 +57,14 @@ const MidYearTeamPage = () => {
               {rows.map((r) => {
                 const meta = STATUS_META[r.status];
                 const open = r.status === "not_started";
+                // Goals the HOD has not approved cannot be reviewed yet.
+                const reviewable = r.goals_approved !== false;
                 return (
                   <tr key={r.employee_user_id} className="border-t">
-                    <td className="px-4 py-3 font-medium text-foreground">{r.employee_name}</td>
+                    <td className="px-4 py-3 font-medium text-foreground">
+                      {r.employee_name}
+                      {r.emp_code && <span className="ml-2 text-xs font-normal text-muted-foreground">{r.emp_code}</span>}
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground">{r.role}</td>
                     <td className="px-4 py-3 text-foreground">
                       {r.h1_achievement === null ? "—" : `${r.h1_achievement.toFixed(1)}%`}
@@ -71,18 +76,22 @@ const MidYearTeamPage = () => {
                       <StatusLabel icon={meta.icon} label={meta.label} className={meta.className} />
                     </td>
                     <td className="px-4 py-3">
-                      <Button
-                        variant="link"
-                        className="h-auto p-0"
-                        onClick={() =>
-                          navigate({
-                            to: "/pms/mid-year-review/$fy/employee/$employeeUserId",
-                            params: { fy, employeeUserId: r.employee_user_id },
-                          })
-                        }
-                      >
-                        {open ? "Open Review" : "View"}
-                      </Button>
+                      {reviewable ? (
+                        <Button
+                          variant="link"
+                          className="h-auto p-0"
+                          onClick={() =>
+                            navigate({
+                              to: "/pms/mid-year-review/$fy/employee/$employeeUserId",
+                              params: { fy, employeeUserId: r.employee_user_id },
+                            })
+                          }
+                        >
+                          {open ? "Open Review" : "View"}
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Goals not approved yet</span>
+                      )}
                     </td>
                   </tr>
                 );

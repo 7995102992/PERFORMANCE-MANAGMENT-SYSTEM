@@ -12,6 +12,7 @@ import { useGetPmsMidYearReviewQuery, useSubmitPmsMidYearReviewMutation } from "
 import type { PmsMidYearReview } from "@/types/pms-manager";
 import { PMS_HEADER_ROW, PmsTableCard, PmsTh } from "../shared/PmsTableCard";
 import { RagDot } from "../shared/RagDot";
+import { formatDisplayDate } from "../shared/pms.utils";
 import { formatNumber, toFieldErrors, type FieldErrors } from "../shared/validation";
 import { midYearReviewSchema } from "./midYear.schema";
 
@@ -116,7 +117,8 @@ const MidYearReviewForm = ({
               <PmsTh>KRA</PmsTh>
               <PmsTh>Target</PmsTh>
               <PmsTh>Units</PmsTh>
-              <PmsTh>H1 actual</PmsTh>
+              <PmsTh>Latest actual</PmsTh>
+              <PmsTh>Achieved</PmsTh>
               <PmsTh>RAG</PmsTh>
             </tr>
           </thead>
@@ -127,6 +129,9 @@ const MidYearReviewForm = ({
                 <td className="px-4 py-3 text-foreground">{formatNumber(k.target)}</td>
                 <td className="px-4 py-3 text-muted-foreground">{k.unit}</td>
                 <td className="px-4 py-3 text-foreground">{formatNumber(k.h1_actual)}</td>
+                <td className="px-4 py-3 text-foreground">
+                  {k.achievement == null ? "—" : `${k.achievement.toFixed(1)}%`}
+                </td>
                 <td className="px-4 py-3">
                   {k.rag ? <RagDot rag={k.rag} /> : <span className="text-muted-foreground">—</span>}
                 </td>
@@ -134,6 +139,30 @@ const MidYearReviewForm = ({
             ))}
           </tbody>
         </table>
+
+        <div className="mt-4 flex flex-wrap items-center gap-x-8 gap-y-2 rounded-lg border px-4 py-3 text-sm">
+          <span>
+            <span className="text-muted-foreground">Overall achievement </span>
+            <strong className="text-foreground">
+              {data.overall_achievement == null ? "—" : `${data.overall_achievement.toFixed(1)}%`}
+            </strong>
+          </span>
+          <span className="inline-flex items-center gap-2">
+            <span className="text-muted-foreground">Overall RAG</span>
+            {data.overall_rag ? <RagDot rag={data.overall_rag} showLabel /> : <span>—</span>}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            Calculated from the actuals the employee reported in Update Progress
+            {data.progress_updated_on ? ` (last submitted ${formatDisplayDate(data.progress_updated_on)})` : ""}.
+          </span>
+        </div>
+
+        {data.employee_comment && (
+          <p className="mt-3 rounded-lg bg-muted/40 px-4 py-3 text-sm">
+            <span className="font-medium text-foreground">Employee comment: </span>
+            <span className="text-muted-foreground">{data.employee_comment}</span>
+          </p>
+        )}
 
         <div className="mt-5 space-y-1.5">
           <Label htmlFor="discussion-notes">Discussion notes</Label>
